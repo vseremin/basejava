@@ -4,17 +4,17 @@ import java.util.Arrays;
  * Array based storage for Resumes
  */
 public class ArrayStorage {
-    Resume[] storage = new Resume[10000];
+    protected final Resume[] storage = new Resume[10000];
     private int size;
 
-    void clear() {
+    public void clear() {
         for (int i = 0; i < size; i++) {
             storage[i] = null;
         }
         size = 0;
     }
 
-    void save(Resume r) {
+    public void save(Resume r) {
         if (size < storage.length) {
             storage[size] = r;
             size++;
@@ -23,35 +23,41 @@ public class ArrayStorage {
         }
     }
 
-    Resume get(String uuid) {
-        for (int i = 0; i < size; i++) {
-            if (storage[i].uuid.equals(uuid)) {
-                return storage[i];
-            }
+    public Resume get(String uuid) {
+        if (getIndex(uuid) != - 1) {
+            return storage[getIndex(uuid)];
         }
-        System.out.println("Ресюме с " + uuid + " нет в базе!");
+        System.out.println("Резюме с " + uuid + " нет в базе!");
         return null;
     }
 
-    void delete(String uuid) {
-        for (int i = 0; i < size; i++) {
-            if (storage[i].uuid.equals(uuid)) {
-                System.arraycopy(storage, i + 1, storage, i, size - i - 1);
-                size--;
-                return;
-            }
+    public void delete(String uuid) {
+        if (getIndex(uuid) != -1) {
+            int index = getIndex(uuid);
+            System.arraycopy(storage,  index + 1, storage, index, size - index - 1);
+            size--;
+            return;
         }
-        System.out.println("Ресюме с " + uuid + " нет в базе!");
+        System.out.println("Резюме с " + uuid + " нет в базе!");
     }
 
     /**
      * @return array, contains only Resumes in storage (without null)
      */
-    Resume[] getAll() {
+    public Resume[] getAll() {
         return Arrays.copyOf(storage, size);
     }
 
-    int size() {
+    public int size() {
         return size;
+    }
+
+    private int getIndex(String uuid) {
+        for (int i = 0; i < size; i++) {
+            if (storage[i].uuid.equals(uuid)) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
