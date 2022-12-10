@@ -16,11 +16,11 @@ public class MainTestArrayStorage {
         final Resume r1 = new Resume();
         r1.setUuid("uuid1");
         final Resume r2 = new Resume();
-        r2.setUuid("uuid2");
+        r2.setUuid("uuid0");
         final Resume r3 = new Resume();
         r3.setUuid("uuid3");
         final Resume r4 = new Resume();
-        r4.setUuid("uuid3");
+        r4.setUuid("uuid0");
 
         ARRAY_STORAGE.save(r1);
         ARRAY_STORAGE.save(r2);
@@ -30,11 +30,11 @@ public class MainTestArrayStorage {
         System.out.println("Size: " + ARRAY_STORAGE.size());
 
         System.out.println("Get dummy: " + ARRAY_STORAGE.get("dummy"));
-        System.out.println("Index of r2: " +
-                Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r2));
+        System.out.println("Index of r4: " +
+                Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r4));
 
         ARRAY_STORAGE.update(r4);
-        System.out.println(ARRAY_STORAGE.getAll()[2] == r3);
+        System.out.println(ARRAY_STORAGE.getAll()[0] == r2);
 
         printAll();
         ARRAY_STORAGE.delete(r1.getUuid());
