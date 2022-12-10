@@ -1,6 +1,6 @@
-package com.urise.webapp.storage;
+package ru.javawebinar.webapp.storage;
 
-import com.urise.webapp.model.Resume;
+import ru.javawebinar.webapp.model.Resume;
 
 /**
  * Array based storage for Resumes
@@ -8,6 +8,8 @@ import com.urise.webapp.model.Resume;
 public interface Storage {
 
     void clear();
+
+    void update(Resume resume);
 
     void save(Resume r);
 
@@ -22,5 +24,4 @@ public interface Storage {
 
     int size();
 
-    void update(Resume resume);
 }

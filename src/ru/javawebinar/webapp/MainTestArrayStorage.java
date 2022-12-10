@@ -1,8 +1,8 @@
-package com.urise.webapp;
+package ru.javawebinar.webapp;
 
-import com.urise.webapp.model.Resume;
-import com.urise.webapp.storage.ArrayStorage;
-import com.urise.webapp.storage.Storage;
+import ru.javawebinar.webapp.model.Resume;
+import ru.javawebinar.webapp.storage.SortedArrayStorage;
+import ru.javawebinar.webapp.storage.Storage;
 
 import java.util.Arrays;
 
@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
 public class MainTestArrayStorage {
-    private static final Storage ARRAY_STORAGE = new ArrayStorage();
+    private static final Storage ARRAY_STORAGE = new SortedArrayStorage();
 
     public static void main(String[] args) {
         final Resume r1 = new Resume();

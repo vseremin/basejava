@@ -1,6 +1,6 @@
-package com.urise.webapp.storage;
+package ru.javawebinar.webapp.storage;
 
-import com.urise.webapp.model.Resume;
+import ru.javawebinar.webapp.model.Resume;
 
 import java.util.Arrays;
 
@@ -14,11 +14,20 @@ public class ArrayStorage extends AbstractArrayStorage {
         size = 0;
     }
 
+    public void update(Resume resume) {
+        int index = getIndex(resume.getUuid());
+        if (index == -1) {
+            System.out.println("Resume " + resume.getUuid() + " not exist");
+            return;
+        }
+        storage[index] = resume;
+    }
+
     public void save(Resume r) {
         if (size >= STORAGE_LIMIT) {
-            System.out.println("В массиве нет свободного места");
+            System.out.println("Storage overflow");
         } else if (getIndex(r.getUuid()) != -1) {
-            System.out.println("Резюме с " + r.getUuid() + " уже есть в базе!");
+            System.out.println("Resume " + r.getUuid() + " already exist");
         } else {
             storage[size] = r;
             size++;
@@ -28,7 +37,7 @@ public class ArrayStorage extends AbstractArrayStorage {
     public void delete(String uuid) {
         int index = getIndex(uuid);
         if (index == -1) {
-            System.out.println("Резюме с " + uuid + " нет в базе!");
+            System.out.println("Resume " + uuid + " not exist");
             return;
         }
         System.arraycopy(storage, index + 1, storage, index, size - index - 1);
@@ -40,15 +49,6 @@ public class ArrayStorage extends AbstractArrayStorage {
      */
     public Resume[] getAll() {
         return Arrays.copyOf(storage, size);
-    }
-
-    public void update(Resume resume) {
-        int index = getIndex(resume.getUuid());
-        if (index == -1) {
-            System.out.println("Резюме с " + resume.getUuid() + " нет в базе!");
-            return;
-        }
-        storage[index] = resume;
     }
 
     protected int getIndex(String uuid) {

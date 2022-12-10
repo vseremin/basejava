@@ -1,6 +1,6 @@
-package com.urise.webapp.storage;
+package ru.javawebinar.webapp.storage;
 
-import com.urise.webapp.model.Resume;
+import ru.javawebinar.webapp.model.Resume;
 
 import java.util.Arrays;
 
@@ -8,6 +8,11 @@ public class SortedArrayStorage extends AbstractArrayStorage {
 
     @Override
     public void clear() {
+
+    }
+
+    @Override
+    public void update(Resume resume) {
 
     }
 
@@ -24,11 +29,6 @@ public class SortedArrayStorage extends AbstractArrayStorage {
     @Override
     public Resume[] getAll() {
         return new Resume[0];
-    }
-
-    @Override
-    public void update(Resume resume) {
-
     }
 
     @Override
