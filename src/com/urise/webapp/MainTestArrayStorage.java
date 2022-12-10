@@ -4,6 +4,8 @@ import com.urise.webapp.model.Resume;
 import com.urise.webapp.storage.ArrayStorage;
 import com.urise.webapp.storage.Storage;
 
+import java.util.Arrays;
+
 /**
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
@@ -28,6 +30,8 @@ public class MainTestArrayStorage {
         System.out.println("Size: " + ARRAY_STORAGE.size());
 
         System.out.println("Get dummy: " + ARRAY_STORAGE.get("dummy"));
+        System.out.println("Index of r2: " +
+                Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r2));
 
         ARRAY_STORAGE.update(r4);
         System.out.println(ARRAY_STORAGE.getAll()[2] == r3);
