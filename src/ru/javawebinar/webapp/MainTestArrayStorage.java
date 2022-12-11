@@ -25,6 +25,7 @@ public class MainTestArrayStorage {
         r4.setUuid("uuid7");
 
         ARRAY_STORAGE.save(r1);
+        ARRAY_STORAGE.save(r1);
         ARRAY_STORAGE.save(r2);
         ARRAY_STORAGE.save(r3);
         ARRAY_STORAGE.save(r5);
