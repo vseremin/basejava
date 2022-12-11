@@ -1,5 +1,8 @@
 package ru.javawebinar.webapp.storage;
 
+import ru.javawebinar.webapp.exception.ExistStorageException;
+import ru.javawebinar.webapp.exception.NotExistStorageException;
+import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.util.Arrays;
@@ -20,9 +23,11 @@ public abstract class AbstractArrayStorage implements Storage {
     public void save(Resume r) {
         int index = getIndex(r.getUuid());
         if (size >= STORAGE_LIMIT) {
-            System.out.println("Storage overflow");
+//            System.out.println("Storage overflow");
+            throw new StorageException("Storage overflow", r.getUuid());
         } else if (index >= 0) {
-            System.out.println("Resume " + r.getUuid() + " already exist");
+//            System.out.println("Resume " + r.getUuid() + " already exist");
+            throw new ExistStorageException(r.getUuid());
         } else {
             addResume(index, r);
             size++;
@@ -55,8 +60,9 @@ public abstract class AbstractArrayStorage implements Storage {
     public int search (String uuid) {
         int index = getIndex(uuid);
         if (index <= -1) {
-            System.out.println("Resume " + uuid + " not exist");
-            return -1;
+//            System.out.println("Resume " + uuid + " not exist");
+//            return -1;
+            throw new NotExistStorageException(uuid);
         }
         return index;
     }
