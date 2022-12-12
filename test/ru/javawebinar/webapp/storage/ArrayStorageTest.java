@@ -6,5 +6,4 @@ public class ArrayStorageTest extends AbstractArrayStorageTest {
     public ArrayStorageTest() {
         super(storage);
     }
-
 }
