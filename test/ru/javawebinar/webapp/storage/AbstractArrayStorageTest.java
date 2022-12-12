@@ -8,7 +8,8 @@ import ru.javawebinar.webapp.exception.NotExistStorageException;
 import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public abstract class AbstractArrayStorageTest {
     private static Storage storage;
@@ -38,9 +39,9 @@ public abstract class AbstractArrayStorageTest {
 
     @Test
     public void save() {
-        int startSize = storage.size();
-        storage.save(new Resume());
-        assertEquals(storage.size(), startSize + 1);
+        Resume resume = new Resume("uuid81");
+        storage.save(resume);
+        assertEquals(storage.getAll()[3], resume);
     }
 
     @Test(expected = ExistStorageException.class)
@@ -50,10 +51,13 @@ public abstract class AbstractArrayStorageTest {
 
     @Test(expected = StorageException.class)
     public void saveOverFlow() {
-        for (int i = storage.size(); i < 10000; i++) {
-            storage.save(new Resume());
+        try {
+            for (int i = storage.size(); i < AbstractArrayStorage.STORAGE_LIMIT; i++) {
+                storage.save(new Resume());
+            }
+        } catch (Exception exception) {
+            Assert.fail("Overflow");
         }
-        assertEquals(10000, storage.size());
         storage.save(new Resume());
     }
 
