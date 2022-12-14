@@ -23,6 +23,7 @@ public abstract class AbstractArrayStorageTest {
     public AbstractArrayStorageTest(Storage storage) {
         AbstractArrayStorageTest.storage = storage;
     }
+
     @Before
     public void setUp() {
         storage.clear();
