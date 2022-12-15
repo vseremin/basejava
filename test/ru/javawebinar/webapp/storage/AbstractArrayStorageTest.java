@@ -8,8 +8,7 @@ import ru.javawebinar.webapp.exception.NotExistStorageException;
 import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 public abstract class AbstractArrayStorageTest {
     private static Storage storage;
@@ -19,8 +18,8 @@ public abstract class AbstractArrayStorageTest {
     private static final Resume RESUME_2 = new Resume(UUID_2);
     protected static final String UUID_3 = "uuid3";
     private static final Resume RESUME_3 = new Resume(UUID_3);
-    private static final String UUID_STANDART = "standart";
-    protected static final Resume STANDART = new Resume(UUID_STANDART);
+    private static final String UUID_4 = "uuid4";
+    protected static final Resume RESUME_4 = new Resume(UUID_4);
     private static final String UUID_NOT_EXIST = "dummy";
 
     public AbstractArrayStorageTest(Storage storage) {
@@ -39,13 +38,13 @@ public abstract class AbstractArrayStorageTest {
     public void clear() {
         storage.clear();
         assertSize(0);
-        assertEquals(storage.getAll(), new Storage[0]);
+        assertArrayEquals(storage.getAll(), new Storage[0]);
     }
 
     @Test
     public void save() {
-        storage.save(STANDART);
-        assertGet(STANDART);
+        storage.save(RESUME_4);
+        assertGet(RESUME_4);
         assertSize(4);
     }
 
