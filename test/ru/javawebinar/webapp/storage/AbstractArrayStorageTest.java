@@ -111,7 +111,6 @@ public abstract class AbstractArrayStorageTest {
         assertEquals(resumes.length, 3);
     }
 
-
     @Test
     public void size() {
         assertSize(3);
