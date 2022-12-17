@@ -1,7 +1,7 @@
 package ru.javawebinar.webapp;
 
 import ru.javawebinar.webapp.model.Resume;
-import ru.javawebinar.webapp.storage.SortedArrayStorage;
+import ru.javawebinar.webapp.storage.ListStorage;
 import ru.javawebinar.webapp.storage.Storage;
 
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
 public class MainTestArrayStorage {
-    private static final Storage ARRAY_STORAGE = new SortedArrayStorage();
+    private static final Storage ARRAY_STORAGE = new ListStorage();
 
     public static void main(String[] args) {
         final Resume r1 = new Resume("uuid1");
@@ -23,16 +23,16 @@ public class MainTestArrayStorage {
         ARRAY_STORAGE.save(r2);
         ARRAY_STORAGE.save(r3);
         ARRAY_STORAGE.save(r5);
-        ARRAY_STORAGE.delete("NULL");
+//        ARRAY_STORAGE.delete("NULL");
         System.out.println("Get r1: " + ARRAY_STORAGE.get(r1.getUuid()));
         System.out.println("Size: " + ARRAY_STORAGE.size());
 
-        System.out.println("Get dummy: " + ARRAY_STORAGE.get("dummy"));
+//        System.out.println("Get dummy: " + ARRAY_STORAGE.get("dummy"));
         System.out.println("Index of r4: " +
                 Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r4));
 
         ARRAY_STORAGE.update(r4);
-        System.out.println(ARRAY_STORAGE.getAll()[0] == r2);
+        System.out.println(ARRAY_STORAGE.getAll()[0] == r1);
 
         printAll();
         ARRAY_STORAGE.delete(r1.getUuid());
