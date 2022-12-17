@@ -9,7 +9,6 @@ public abstract class AbstractStorage implements Storage {
 
     protected static final int STORAGE_LIMIT = 10000;
 
-
     @Override
     public void clear() {
         clearStorage();
