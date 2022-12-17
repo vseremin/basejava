@@ -1,10 +1,8 @@
 package ru.javawebinar.webapp.storage;
 
-import ru.javawebinar.webapp.exception.NotExistStorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ListStorage extends AbstractStorage {
@@ -14,15 +12,6 @@ public class ListStorage extends AbstractStorage {
     @Override
     protected void clearStorage() {
         storage.clear();
-    }
-
-    @Override
-    protected int search(String uuid) {
-        int index = getIndex(uuid);
-        if (index <= -1) {
-            throw new NotExistStorageException(uuid);
-        }
-        return index;
     }
 
     @Override
@@ -63,10 +52,7 @@ public class ListStorage extends AbstractStorage {
     @Override
     protected Resume[] getAllResumes() {
         Resume[] r = new Resume[getSize()];
-        for (int i = 0; i < storage.size(); i++) {
-            r[i] = storage.get(i);
-        }
-        return r;
+        return  storage.toArray(r);
     }
 
     @Override
