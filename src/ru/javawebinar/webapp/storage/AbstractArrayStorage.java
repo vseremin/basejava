@@ -1,5 +1,6 @@
 package ru.javawebinar.webapp.storage;
 
+import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.Arrays;
  */
 public abstract class AbstractArrayStorage extends AbstractStorage {
 
+    protected static final int STORAGE_LIMIT = 10000;
     protected final Resume[] storage = new Resume[STORAGE_LIMIT];
     protected int size;
 
@@ -25,8 +27,12 @@ public abstract class AbstractArrayStorage extends AbstractStorage {
 
     @Override
     public void saveResume(int index, Resume r) {
-        addResume(index, r);
-        size++;
+        if (getSize() >= AbstractArrayStorage.STORAGE_LIMIT) {
+            throw new StorageException("Storage overflow", r.getUuid());
+        } else {
+            addResume(index, r);
+            size++;
+        }
     }
 
     @Override

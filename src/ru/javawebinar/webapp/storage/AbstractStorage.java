@@ -2,12 +2,9 @@ package ru.javawebinar.webapp.storage;
 
 import ru.javawebinar.webapp.exception.ExistStorageException;
 import ru.javawebinar.webapp.exception.NotExistStorageException;
-import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 public abstract class AbstractStorage implements Storage {
-
-    protected static final int STORAGE_LIMIT = 10000;
 
     @Override
     public void clear() {
@@ -25,9 +22,7 @@ public abstract class AbstractStorage implements Storage {
     @Override
     public void save(Resume r) {
         int index = getIndex(r.getUuid());
-        if (getSize() >= STORAGE_LIMIT) {
-            throw new StorageException("Storage overflow", r.getUuid());
-        } else if (index >= 0) {
+        if (index >= 0) {
             throw new ExistStorageException(r.getUuid());
         } else {
             saveResume(index, r);

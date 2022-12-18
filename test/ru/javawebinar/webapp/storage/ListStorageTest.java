@@ -1,6 +1,6 @@
 package ru.javawebinar.webapp.storage;
 
-public class ListStorageTest extends AbstractArrayStorageTest {
+public class ListStorageTest extends AbstractStorageTest {
 
     private static final Storage storage = new ListStorage();
 
