@@ -22,12 +22,17 @@ public class ArrayStorage extends AbstractArrayStorage {
      */
 
     @Override
-    protected int getIndex(String uuid) {
+    protected Object getSearchKey(String uuid) {
         for (int i = 0; i < size; i++) {
             if (storage[i].getUuid().equals(uuid)) {
                 return i;
             }
         }
         return -1;
+    }
+
+    @Override
+    protected boolean isExist(String uuid) {
+        return (int) getSearchKey(uuid) >= 0;
     }
 }

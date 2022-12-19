@@ -13,34 +13,26 @@ public abstract class AbstractStorage implements Storage {
 
     @Override
     public void update(Resume resume) {
-        int index = search(resume.getUuid());
-        if (index >= 0) {
-            updateResume(resume, index);
-        }
+        getNotExistingSearchKey(resume);
+        updateResume(resume);
     }
 
     @Override
     public void save(Resume r) {
-        int index = getIndex(r.getUuid());
-        if (index >= 0) {
-            throw new ExistStorageException(r.getUuid());
-        } else {
-            saveResume(index, r);
-        }
+        getExistingSearchKey(r);
+        saveResume((int) getSearchKey(r.getUuid()), r);
     }
 
     @Override
     public Resume get(String uuid) {
-        int index = search(uuid);
-        return getResume(index);
+        getNotExistingSearchKey(new Resume(uuid));
+        return getResume((int) getSearchKey(uuid));
     }
 
     @Override
     public void delete(String uuid) {
-        int index = search(uuid);
-        if (index >= 0) {
-            deleteFromStorage(index);
-        }
+        getNotExistingSearchKey(new Resume(uuid));
+        deleteFromStorage((int) getSearchKey(uuid));
     }
 
     @Override
@@ -53,23 +45,27 @@ public abstract class AbstractStorage implements Storage {
         return getSize();
     }
 
-    protected int search(String uuid) {
-        int index = getIndex(uuid);
-        if (index <= -1) {
-            throw new NotExistStorageException(uuid);
+    protected void getExistingSearchKey(Resume r) {
+        if (isExist(r.getUuid())) {
+            throw new ExistStorageException(r.getUuid());
         }
-        return index;
+    }
+
+    protected void getNotExistingSearchKey(Resume r) {
+        if (!isExist(r.getUuid())) {
+            throw new NotExistStorageException(r.getUuid());
+        }
     }
 
     protected abstract void clearStorage();
 
-    protected abstract void updateResume(Resume resume, int index);
+    protected abstract void updateResume(Resume resume);
 
     protected abstract void saveResume(int index, Resume r);
 
     protected abstract void addResume(int index, Resume r);
 
-    protected abstract int getIndex(String uuid);
+    protected abstract Object getSearchKey(String uuid);
 
     public abstract Resume getResume(int index);
 
@@ -78,4 +74,6 @@ public abstract class AbstractStorage implements Storage {
     protected abstract Resume[] getAllResumes();
 
     protected abstract int getSize();
+
+    protected abstract boolean isExist(String uuid);
 }
