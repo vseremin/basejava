@@ -1,7 +1,7 @@
 package ru.javawebinar.webapp;
 
 import ru.javawebinar.webapp.model.Resume;
-import ru.javawebinar.webapp.storage.ListStorage;
+import ru.javawebinar.webapp.storage.MapStorage;
 import ru.javawebinar.webapp.storage.Storage;
 
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Arrays;
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
 public class MainTestArrayStorage {
-    private static final Storage ARRAY_STORAGE = new ListStorage();
+    private static final Storage ARRAY_STORAGE = new MapStorage();
 
     public static void main(String[] args) {
         final Resume r1 = new Resume("uuid1");
