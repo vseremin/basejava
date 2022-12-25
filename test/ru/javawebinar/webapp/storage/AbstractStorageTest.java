@@ -37,7 +37,7 @@ public class AbstractStorageTest {
     public void clear() {
         storage.clear();
         assertSize(0);
-        assertArrayEquals(storage.getAll(), new Storage[0]);
+        assertArrayEquals(storage.getAllSorted().toArray(), new Storage[0]);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class AbstractStorageTest {
 
     @Test
     public void get() {
-        for (Resume resume : storage.getAll()) {
+        for (Resume resume : storage.getAllSorted()) {
             assertGet(resume);
         }
     }
@@ -90,7 +90,8 @@ public class AbstractStorageTest {
 
     @Test
     public void getAll() {
-        Resume[] resumes = storage.getAll();
+        Resume[] resumes = new Resume[3];
+        storage.getAllSorted().toArray(resumes);
         assertEquals(resumes[0], RESUME_1);
         assertEquals(resumes[1], RESUME_2);
         assertEquals(resumes[2], RESUME_3);

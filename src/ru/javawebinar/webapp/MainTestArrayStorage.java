@@ -1,16 +1,14 @@
 package ru.javawebinar.webapp;
 
 import ru.javawebinar.webapp.model.Resume;
-import ru.javawebinar.webapp.storage.MapStorage;
+import ru.javawebinar.webapp.storage.MapResumeStorage;
 import ru.javawebinar.webapp.storage.Storage;
-
-import java.util.Arrays;
 
 /**
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
 public class MainTestArrayStorage {
-    private static final Storage ARRAY_STORAGE = new MapStorage();
+    private static final Storage ARRAY_STORAGE = new MapResumeStorage();
 
     public static void main(String[] args) {
         final Resume r1 = new Resume("uuid1");
@@ -28,11 +26,11 @@ public class MainTestArrayStorage {
         System.out.println("Size: " + ARRAY_STORAGE.size());
 
 //        System.out.println("Get dummy: " + ARRAY_STORAGE.get("dummy"));
-        System.out.println("Index of r4: " +
-                Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r4));
+//        System.out.println("Index of r4: " +
+//                Arrays.binarySearch(ARRAY_STORAGE.getAll(), 0, ARRAY_STORAGE.size(), r4));
 
         ARRAY_STORAGE.update(r4);
-        System.out.println(ARRAY_STORAGE.getAll()[0] == r1);
+        System.out.println(ARRAY_STORAGE.getAllSorted().get(0) == r1);
 
         printAll();
         ARRAY_STORAGE.delete(r1.getUuid());
@@ -45,7 +43,7 @@ public class MainTestArrayStorage {
 
     static void printAll() {
         System.out.println("\nGet All");
-        for (Resume r : ARRAY_STORAGE.getAll()) {
+        for (Resume r : ARRAY_STORAGE.getAllSorted()) {
             System.out.println(r);
         }
     }
