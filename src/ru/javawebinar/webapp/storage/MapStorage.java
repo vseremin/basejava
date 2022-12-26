@@ -2,9 +2,7 @@ package ru.javawebinar.webapp.storage;
 
 import ru.javawebinar.webapp.model.Resume;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class MapStorage extends AbstractStorage {
 
@@ -41,8 +39,8 @@ public class MapStorage extends AbstractStorage {
     }
 
     @Override
-    protected Resume[] doGetAll() {
-        return new TreeMap<>(storage).values().toArray(new Resume[getSize()]);
+    protected List<Resume> doGetAll() {
+        return new ArrayList<>(storage.values());
     }
 
     @Override

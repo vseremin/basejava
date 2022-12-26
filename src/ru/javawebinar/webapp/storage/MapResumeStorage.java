@@ -2,7 +2,16 @@ package ru.javawebinar.webapp.storage;
 
 import ru.javawebinar.webapp.model.Resume;
 
-public class MapResumeStorage extends MapStorage {
+import java.util.*;
+
+public class MapResumeStorage extends AbstractStorage {
+
+    protected static final Map<String, Resume> storage = new HashMap<>();
+
+    @Override
+    protected void clearStorage() {
+        storage.clear();
+    }
 
     @Override
     protected void doUpdate(Object searchKey, Resume resume) {
@@ -30,7 +39,17 @@ public class MapResumeStorage extends MapStorage {
     }
 
     @Override
+    protected List<Resume> doGetAll() {
+        return new ArrayList<>(storage.values());
+    }
+
+    @Override
+    protected int getSize() {
+        return storage.size();
+    }
+
+    @Override
     protected boolean isExist(Object searchKey) {
-        return storage.containsValue(searchKey);
+        return searchKey != null;
     }
 }

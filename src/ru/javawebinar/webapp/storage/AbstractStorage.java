@@ -4,20 +4,14 @@ import ru.javawebinar.webapp.exception.ExistStorageException;
 import ru.javawebinar.webapp.exception.NotExistStorageException;
 import ru.javawebinar.webapp.model.Resume;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 public abstract class AbstractStorage implements Storage {
 
     public static final Comparator<Resume> RESUME_COMPARARTOR =
-            (resume1, resume2) -> {
-                if (!resume1.getFullName().equals(resume2.getFullName())){
-                    return resume1.getFullName().compareTo(resume2.getFullName());
-                } else {
-                    return resume1.getUuid().compareTo(resume2.getUuid());
-                }
-            };
+            Comparator.comparing(Resume::getUuid)
+                    .thenComparing(Resume::getFullName);
 
     @Override
     public void clear() {
@@ -46,7 +40,9 @@ public abstract class AbstractStorage implements Storage {
 
     @Override
     public List<Resume> getAllSorted() {
-        return (Arrays.stream(doGetAll()).toList()).stream().sorted(RESUME_COMPARARTOR).toList();
+        List<Resume> list = doGetAll();
+        list.sort(RESUME_COMPARARTOR);
+        return list;
     }
 
     @Override
@@ -82,7 +78,7 @@ public abstract class AbstractStorage implements Storage {
 
     protected abstract void doDelete(Object searchKey);
 
-    protected abstract Resume[] doGetAll();
+    protected abstract List<Resume> doGetAll();
 
     protected abstract int getSize();
 

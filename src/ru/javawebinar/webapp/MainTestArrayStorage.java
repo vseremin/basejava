@@ -1,21 +1,21 @@
 package ru.javawebinar.webapp;
 
 import ru.javawebinar.webapp.model.Resume;
-import ru.javawebinar.webapp.storage.MapResumeStorage;
+import ru.javawebinar.webapp.storage.SortedArrayStorage;
 import ru.javawebinar.webapp.storage.Storage;
 
 /**
  * Test for your com.urise.webapp.storage.ArrayStorage implementation
  */
 public class MainTestArrayStorage {
-    private static final Storage ARRAY_STORAGE = new MapResumeStorage();
+    private static final Storage ARRAY_STORAGE = new SortedArrayStorage();
 
     public static void main(String[] args) {
-        final Resume r1 = new Resume("uuid1");
-        final Resume r2 = new Resume("uuid0");
-        final Resume r5 = new Resume("uuid5");
-        final Resume r3 = new Resume("uuid3");
-        final Resume r4 = new Resume("uuid3");
+        final Resume r1 = new Resume("","uuid1");
+        final Resume r2 = new Resume("","uuid0");
+        final Resume r5 = new Resume("","uuid5");
+        final Resume r3 = new Resume("","uuid3");
+        final Resume r4 = new Resume("","uuid3");
 
         ARRAY_STORAGE.save(r1);
         ARRAY_STORAGE.save(r2);

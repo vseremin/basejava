@@ -12,13 +12,20 @@ import static org.junit.Assert.*;
 public class AbstractStorageTest {
     private static Storage storage;
     protected static final String UUID_1 = "uuid1";
-    private static final Resume RESUME_1 = new Resume(UUID_1);
+    public static final String NAME_1 = "1";
+    private static final Resume RESUME_1 = new Resume(NAME_1, UUID_1);
+
+    public static final String NAME_2 = "2";
     protected static final String UUID_2 = "uuid2";
-    private static final Resume RESUME_2 = new Resume(UUID_2);
+    private static final Resume RESUME_2 = new Resume(NAME_2, UUID_2);
+
+    public static final String NAME_3 = "2";
     protected static final String UUID_3 = "uuid3";
-    private static final Resume RESUME_3 = new Resume(UUID_3);
+    private static final Resume RESUME_3 = new Resume(NAME_3, UUID_3);
+
+    public static final String NAME_4 = "";
     private static final String UUID_4 = "uuid4";
-    protected static final Resume RESUME_4 = new Resume(UUID_4);
+    protected static final Resume RESUME_4 = new Resume(NAME_4, UUID_4);
     private static final String UUID_NOT_EXIST = "dummy";
 
     public AbstractStorageTest(Storage storage) {
@@ -49,19 +56,19 @@ public class AbstractStorageTest {
 
     @Test(expected = ExistStorageException.class)
     public void saveAlreadyExist() {
-        storage.save(new Resume(UUID_1));
+        storage.save(new Resume(NAME_1, UUID_1));
     }
 
     @Test
     public void update() {
-        Resume resume = new Resume(UUID_1);
+        Resume resume = new Resume(NAME_1, UUID_1);
         storage.update(resume);
         assertSame(resume, storage.get(UUID_1));
     }
 
     @Test(expected = NotExistStorageException.class)
     public void updateNotExist() {
-        Resume resume = new Resume(UUID_NOT_EXIST);
+        Resume resume = new Resume(NAME_3, UUID_NOT_EXIST);
         storage.update(resume);
     }
 
