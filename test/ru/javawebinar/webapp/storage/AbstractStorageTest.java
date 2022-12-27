@@ -10,7 +10,7 @@ import ru.javawebinar.webapp.model.Resume;
 import static org.junit.Assert.*;
 
 public class AbstractStorageTest {
-    private static Storage storage;
+    protected static Storage storage;
     protected static final String UUID_1 = "uuid1";
     public static final String NAME_1 = "1";
     private static final Resume RESUME_1 = new Resume(NAME_1, UUID_1);

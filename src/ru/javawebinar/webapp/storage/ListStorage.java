@@ -5,7 +5,7 @@ import ru.javawebinar.webapp.model.Resume;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListStorage extends AbstractStorage {
+public class ListStorage extends AbstractStorage<Integer> {
 
     private static final List<Resume> storage = new ArrayList<>();
 
@@ -15,13 +15,13 @@ public class ListStorage extends AbstractStorage {
     }
 
     @Override
-    protected void doUpdate(Object searchKey, Resume resume) {
-        storage.set((int) searchKey, resume);
+    protected void doUpdate(Integer searchKey, Resume resume) {
+        storage.set(searchKey, resume);
     }
 
     @Override
-    protected void doSave(Object index, Resume r) {
-        addResume((int) index, r);
+    protected void doSave(Integer index, Resume r) {
+        addResume(index, r);
     }
 
     protected void addResume(int index, Resume r) {
@@ -29,7 +29,7 @@ public class ListStorage extends AbstractStorage {
     }
 
     @Override
-    protected Object getSearchKey(String uuid) {
+    protected Integer getSearchKey(String uuid) {
         for (int i = 0; i < storage.size(); i++) {
             if (storage.get(i).getUuid().equals(uuid)) {
                 return i;
@@ -39,13 +39,13 @@ public class ListStorage extends AbstractStorage {
     }
 
     @Override
-    public Resume doGet(Object searchKey) {
-        return (int) searchKey >= 0 ? storage.get((int) searchKey) : null;
+    public Resume doGet(Integer searchKey) {
+        return searchKey >= 0 ? storage.get(searchKey) : null;
     }
 
     @Override
-    protected void doDelete(Object searchKey) {
-        storage.remove((int) searchKey);
+    protected void doDelete(Integer searchKey) {
+        storage.remove(searchKey.intValue());
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ListStorage extends AbstractStorage {
     }
 
     @Override
-    protected boolean isExist(Object searchKey) {
-        return (int) searchKey >= 0;
+    protected boolean isExist(Integer searchKey) {
+        return searchKey >= 0;
     }
 }
