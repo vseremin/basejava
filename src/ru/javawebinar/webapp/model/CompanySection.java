@@ -3,14 +3,14 @@ package ru.javawebinar.webapp.model;
 import java.util.List;
 
 public class CompanySection extends AbstractSection {
-    private final List<Company> company;
+    private final List<Company> companies;
 
     public CompanySection(List<Company> company) {
-        this.company = company;
+        this.companies = company;
     }
 
-    public List<Company> getCompany() {
-        return company;
+    public List<Company> getCompanies() {
+        return companies;
     }
 
     @Override
@@ -20,16 +20,16 @@ public class CompanySection extends AbstractSection {
 
         CompanySection that = (CompanySection) o;
 
-        return company.equals(that.company);
+        return companies.equals(that.companies);
     }
 
     @Override
     public int hashCode() {
-        return company.hashCode();
+        return companies.hashCode();
     }
 
     @Override
     public String toString() {
-        return "company=" + company + "\n";
+        return "company=" + companies + "\n";
     }
 }

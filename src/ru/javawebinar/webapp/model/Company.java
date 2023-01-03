@@ -5,14 +5,12 @@ import java.util.List;
 public class Company {
     private final String website;
     private final String name;
-    private final String post;
-    private final List<Period> period;
+    private final List<Period> periods;
 
-    public Company(String website, String name, String post, List<Period> period) {
+    public Company(String website, String name, List<Period> period) {
         this.website = website;
         this.name = name;
-        this.post = post;
-        this.period = period;
+        this.periods = period;
     }
 
     public String getWebsite() {
@@ -23,12 +21,8 @@ public class Company {
         return name;
     }
 
-    public String getPost() {
-        return post;
-    }
-
-    public List<Period> getPeriod() {
-        return period;
+    public List<Period> getPeriods() {
+        return periods;
     }
 
     @Override
@@ -40,16 +34,14 @@ public class Company {
 
         if (!website.equals(company.website)) return false;
         if (!name.equals(company.name)) return false;
-        if (!post.equals(company.post)) return false;
-        return period.equals(company.period);
+        return periods.equals(company.periods);
     }
 
     @Override
     public int hashCode() {
         int result = website.hashCode();
         result = 31 * result + name.hashCode();
-        result = 31 * result + post.hashCode();
-        result = 31 * result + period.hashCode();
+        result = 31 * result + periods.hashCode();
         return result;
     }
 
@@ -58,8 +50,7 @@ public class Company {
         return "Company{" +
                 "website='" + website + '\'' +
                 ", name='" + name + '\'' +
-                ", post='" + post + '\'' +
-                ", period=" + period +
+                ", period=" + periods +
                 '}';
     }
 }
