@@ -1,11 +1,13 @@
 package ru.javawebinar.webapp.model;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CompanySection extends AbstractSection {
     private final List<Company> companies;
 
     public CompanySection(List<Company> company) {
+        Objects.requireNonNull(company, "company must not be null");
         this.companies = company;
     }
 
@@ -20,12 +22,12 @@ public class CompanySection extends AbstractSection {
 
         CompanySection that = (CompanySection) o;
 
-        return companies.equals(that.companies);
+        return Objects.equals(companies, that.companies);
     }
 
     @Override
     public int hashCode() {
-        return companies.hashCode();
+        return companies != null ? companies.hashCode() : 0;
     }
 
     @Override
