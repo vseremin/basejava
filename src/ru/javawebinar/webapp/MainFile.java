@@ -13,7 +13,7 @@ public class MainFile {
         } catch (IOException e) {
             throw new RuntimeException("Error", e);
         }
-        File dir = new File("src/ru/javawebinar/webapp");
+        File dir = new File("src/ru/javawebinar");
         System.out.println(dir.isDirectory());
         String[] list = dir.list();
         if (list != null) {
@@ -28,6 +28,21 @@ public class MainFile {
             throw new RuntimeException(e);
         }
 
+        printDir("src/ru/javawebinar");
 
+    }
+
+    static void printDir(String name) {
+        File dir = new File(name);
+        String[] list = dir.list();
+        if (list != null) {
+            for (String file : list) {
+                System.out.println(file);
+                String fileName = name + File.separator + file;
+                if (new File(fileName).isDirectory()) {
+                    printDir(fileName);
+                }
+            }
+        }
     }
 }
