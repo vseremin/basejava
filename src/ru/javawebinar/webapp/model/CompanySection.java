@@ -1,10 +1,15 @@
 package ru.javawebinar.webapp.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class CompanySection extends AbstractSection {
     private final List<Company> companies;
+
+    public CompanySection(Company company) {
+        this(Arrays.asList(company));
+    }
 
     public CompanySection(List<Company> company) {
         Objects.requireNonNull(company, "company must not be null");
