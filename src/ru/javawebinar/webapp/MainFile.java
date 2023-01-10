@@ -28,19 +28,24 @@ public class MainFile {
             throw new RuntimeException(e);
         }
 
-        printDir("src/ru/javawebinar");
+        printDirectoryDeeply("src/ru/javawebinar", "");
 
     }
 
-    static void printDir(String name) {
-        File dir = new File(name);
-        String[] list = dir.list();
-        if (list != null) {
-            for (String file : list) {
-                System.out.println(file);
-                String fileName = name + File.separator + file;
-                if (new File(fileName).isDirectory()) {
-                    printDir(fileName);
+    //TODO: make pretty output
+    static void printDirectoryDeeply(String name, String otstup) {
+        otstup += "   ";
+        File[] listFiles = new File(name).listFiles();
+        if (listFiles != null) {
+            for (File file : listFiles) {
+                if (file.isFile()) {
+                    System.out.println("File:      " + otstup + file.getName());
+                }
+
+                String fileName = name + File.separator + file.getName();
+                if (file.isDirectory()) {
+                    System.out.println("Directory: " + otstup + file.getName());
+                    printDirectoryDeeply(fileName, otstup);
                 }
             }
         }

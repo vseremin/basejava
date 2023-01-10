@@ -2,6 +2,7 @@ package ru.javawebinar.webapp.model;
 
 import ru.javawebinar.webapp.util.DateUtil;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Arrays;
@@ -10,7 +11,9 @@ import java.util.Objects;
 
 import static ru.javawebinar.webapp.util.DateUtil.NOW;
 
-public class Company {
+public class Company implements Serializable {
+    public static final long serialVersionUID = 1L;
+
     private final String website;
     private final String name;
     private final List<Period> periods;
@@ -68,7 +71,7 @@ public class Company {
                 '}';
     }
 
-    public static class Period {
+    public static class Period implements Serializable {
         private final LocalDate startDate;
         private final LocalDate endDate;
         private final String title;
