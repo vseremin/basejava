@@ -12,16 +12,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class AbstractPathStorage extends AbstractStorage<Path> {
+public class AbstractPathStorage extends AbstractStorage<Path> {
     private final Path directory;
+    private StorageStrategy storageStrategy;
 
-    protected AbstractPathStorage(String dir) {
+    protected AbstractPathStorage(String dir, StorageStrategy storageStrategy) {
         directory = Paths.get(dir);
 
         Objects.requireNonNull(directory, "directory must not be null");
         if (!Files.isDirectory(directory) || !Files.isWritable(directory)) {
             throw new IllegalArgumentException(dir + "is not directory");
         }
+        this.storageStrategy = storageStrategy;
     }
 
     @Override
@@ -36,7 +38,7 @@ public abstract class AbstractPathStorage extends AbstractStorage<Path> {
     @Override
     protected void doUpdate(Path searchKey, Resume resume) {
         try {
-            doWrite(resume, new BufferedOutputStream(Files.newOutputStream(searchKey)));
+            storageStrategy.doWrite(resume, new BufferedOutputStream(Files.newOutputStream(searchKey)));
         } catch (IOException e) {
             throw new StorageException("File write error", searchKey.toString(), e);
         }
@@ -60,7 +62,7 @@ public abstract class AbstractPathStorage extends AbstractStorage<Path> {
     @Override
     public Resume doGet(Path searchKey) {
         try {
-            return doRead(new BufferedInputStream(Files.newInputStream(searchKey)));
+            return storageStrategy.doRead(new BufferedInputStream(Files.newInputStream(searchKey)));
         } catch (IOException e) {
             throw new StorageException("File read error", searchKey.toString(), e);
         }
@@ -79,7 +81,7 @@ public abstract class AbstractPathStorage extends AbstractStorage<Path> {
     protected List<Resume> doGetAll() {
         List<Resume> resumes = new ArrayList<>();
         try {
-            List<Path> path =  Files.list(directory).collect(Collectors.toList());
+            List<Path> path = Files.list(directory).collect(Collectors.toList());
             for (Path p : path) {
                 resumes.add(doGet(p));
             }
@@ -95,7 +97,7 @@ public abstract class AbstractPathStorage extends AbstractStorage<Path> {
         try {
             listPath = Files.list(directory).collect(Collectors.toList());
         } catch (IOException e) {
-            throw new StorageException("Directory read error",  null);
+            throw new StorageException("Directory read error", null);
         }
         return listPath.size();
     }
@@ -105,7 +107,4 @@ public abstract class AbstractPathStorage extends AbstractStorage<Path> {
         return Files.exists(path);
     }
 
-    public abstract void doWrite(Resume r, OutputStream os) throws IOException;
-
-    public abstract Resume doRead(InputStream is) throws IOException;
 }

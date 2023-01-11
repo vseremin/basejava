@@ -33,19 +33,21 @@ public class MainFile {
     }
 
     //TODO: make pretty output
-    static void printDirectoryDeeply(String name, String otstup) {
-        otstup += "   ";
+    static void printDirectoryDeeply(String name, String offset) {
+        String fileString = "File:      ";
+        String dirString = "Directory: ";
+        offset = (new StringBuilder(offset).append("    ")).toString();
         File[] listFiles = new File(name).listFiles();
         if (listFiles != null) {
             for (File file : listFiles) {
                 if (file.isFile()) {
-                    System.out.println("File:      " + otstup + file.getName());
+                    System.out.println(fileString + offset + file.getName());
                 }
 
                 String fileName = name + File.separator + file.getName();
                 if (file.isDirectory()) {
-                    System.out.println("Directory: " + otstup + file.getName());
-                    printDirectoryDeeply(fileName, otstup);
+                    System.out.println(dirString + offset + file.getName());
+                    printDirectoryDeeply(fileName, offset);
                 }
             }
         }

@@ -5,14 +5,11 @@ import ru.javawebinar.webapp.model.Resume;
 
 import java.io.*;
 
-public class ObjectStreamStorage extends AbstractFileStorage implements StorageStrategy {
-    public ObjectStreamStorage(File directory) {
-        super(directory);
-    }
+public class ObjectStorage implements StorageStrategy {
 
     @Override
     public void doWrite(Resume r, OutputStream os) throws IOException {
-        try(ObjectOutputStream oos = new ObjectOutputStream(os)) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(os)) {
             oos.writeObject(r);
         }
     }

@@ -18,7 +18,7 @@ public class Company implements Serializable {
     private final String name;
     private final List<Period> periods;
 
-    public Company(String website, String name, Period ... periods) {
+    public Company(String website, String name, Period... periods) {
         this(website, name, Arrays.asList(periods));
     }
 
