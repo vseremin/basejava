@@ -1,4 +1,4 @@
-package ru.javawebinar.webapp.storage;
+package ru.javawebinar.webapp.storage.serializer;
 
 import ru.javawebinar.webapp.model.Resume;
 
@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public interface StorageStrategy {
+public interface Serializer {
     void doWrite(Resume r, OutputStream os) throws IOException;
     Resume doRead(InputStream is) throws IOException;
 }

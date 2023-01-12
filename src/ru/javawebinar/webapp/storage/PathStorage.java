@@ -2,6 +2,7 @@ package ru.javawebinar.webapp.storage;
 
 import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
+import ru.javawebinar.webapp.storage.serializer.Serializer;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,11 +13,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AbstractPathStorage extends AbstractStorage<Path> {
+public class PathStorage extends AbstractStorage<Path> {
     private final Path directory;
-    private StorageStrategy storageStrategy;
+    private final Serializer storageStrategy;
 
-    protected AbstractPathStorage(String dir, StorageStrategy storageStrategy) {
+    protected PathStorage(String dir, Serializer storageStrategy) {
         directory = Paths.get(dir);
 
         Objects.requireNonNull(directory, "directory must not be null");
@@ -28,11 +29,7 @@ public class AbstractPathStorage extends AbstractStorage<Path> {
 
     @Override
     protected void clearStorage() {
-        try {
-            Files.list(directory).forEach(this::doDelete);
-        } catch (IOException e) {
-            throw new StorageException("Path delete error", null);
-        }
+        getListPath().forEach(this::doDelete);
     }
 
     @Override
@@ -56,7 +53,7 @@ public class AbstractPathStorage extends AbstractStorage<Path> {
 
     @Override
     protected Path getSearchKey(String uuid) {
-        return Paths.get(directory + File.separator + uuid);
+        return directory.resolve(uuid);
     }
 
     @Override
@@ -80,26 +77,15 @@ public class AbstractPathStorage extends AbstractStorage<Path> {
     @Override
     protected List<Resume> doGetAll() {
         List<Resume> resumes = new ArrayList<>();
-        try {
-            List<Path> path = Files.list(directory).collect(Collectors.toList());
-            for (Path p : path) {
-                resumes.add(doGet(p));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for (Path p : getListPath()) {
+            resumes.add(doGet(p));
         }
         return resumes;
     }
 
     @Override
     protected int getSize() {
-        List<Path> listPath;
-        try {
-            listPath = Files.list(directory).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new StorageException("Directory read error", null);
-        }
-        return listPath.size();
+        return getListPath().size();
     }
 
     @Override
@@ -107,4 +93,11 @@ public class AbstractPathStorage extends AbstractStorage<Path> {
         return Files.exists(path);
     }
 
+    private List<Path> getListPath() {
+        try {
+            return Files.list(directory).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new StorageException("Error in the path list", null);
+        }
+    }
 }

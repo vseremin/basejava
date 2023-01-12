@@ -1,11 +1,11 @@
-package ru.javawebinar.webapp.storage;
+package ru.javawebinar.webapp.storage.serializer;
 
 import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.io.*;
 
-public class ObjectStorage implements StorageStrategy {
+public class SerializerOption implements Serializer {
 
     @Override
     public void doWrite(Resume r, OutputStream os) throws IOException {

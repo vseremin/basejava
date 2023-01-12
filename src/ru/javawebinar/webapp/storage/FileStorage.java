@@ -2,17 +2,18 @@ package ru.javawebinar.webapp.storage;
 
 import ru.javawebinar.webapp.exception.StorageException;
 import ru.javawebinar.webapp.model.Resume;
+import ru.javawebinar.webapp.storage.serializer.Serializer;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class AbstractFileStorage extends AbstractStorage<File> {
+public class FileStorage extends AbstractStorage<File> {
     private final File directory;
-    private StorageStrategy storageStrategy;
+    private final Serializer storageStrategy;
 
-    protected AbstractFileStorage(File directory, StorageStrategy storageStrategy) {
+    protected FileStorage(File directory, Serializer storageStrategy) {
         Objects.requireNonNull(directory, "directory must not be null");
         if (!directory.isDirectory()) {
             throw new IllegalArgumentException(directory.getAbsolutePath() + "is not directory");
@@ -26,13 +27,8 @@ public class AbstractFileStorage extends AbstractStorage<File> {
 
     @Override
     protected void clearStorage() {
-        File[] listFiles = directory.listFiles();
-        if (listFiles == null) {
-            throw new StorageException("listFiles is null", null);
-        } else {
-            for (File file : listFiles) {
-                doDelete(file);
-            }
+        for (File file : getFileArray()) {
+            doDelete(file);
         }
     }
 
@@ -78,12 +74,8 @@ public class AbstractFileStorage extends AbstractStorage<File> {
 
     @Override
     protected List<Resume> doGetAll() {
-        File[] listFiles = directory.listFiles();
-        if (listFiles == null) {
-            throw new StorageException("Directory read error", null);
-        }
         List<Resume> resumes = new ArrayList<>();
-        for (File file : listFiles) {
+        for (File file : getFileArray()) {
             resumes.add(doGet(file));
         }
         return resumes;
@@ -91,11 +83,7 @@ public class AbstractFileStorage extends AbstractStorage<File> {
 
     @Override
     protected int getSize() {
-        String[] listFiles = directory.list();
-        if (listFiles == null) {
-            throw new StorageException("Directory read error", null);
-        }
-        return listFiles.length;
+        return getFileArray().length;
     }
 
     @Override
@@ -103,7 +91,10 @@ public class AbstractFileStorage extends AbstractStorage<File> {
         return file.exists();
     }
 
-//    public abstract void doWrite(Resume r, OutputStream os) throws IOException;
-//
-//    public abstract Resume doRead(InputStream is) throws IOException;
+    private File[] getFileArray() {
+        if (directory.listFiles() != null) {
+            return directory.listFiles();
+        }
+        throw new StorageException("Directory read error", null);
+    }
 }
