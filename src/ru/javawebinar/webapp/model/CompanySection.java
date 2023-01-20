@@ -6,7 +6,10 @@ import java.util.Objects;
 
 public class CompanySection extends AbstractSection {
     public static final long serialVersionUID = 1L;
-    private final List<Company> companies;
+    private List<Company> companies;
+
+    public CompanySection() {
+    }
 
     public CompanySection(Company company) {
         this(Arrays.asList(company));

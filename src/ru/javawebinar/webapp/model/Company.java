@@ -1,7 +1,11 @@
 package ru.javawebinar.webapp.model;
 
 import ru.javawebinar.webapp.util.DateUtil;
+import ru.javawebinar.webapp.util.LocalDateAdapter;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Month;
@@ -11,12 +15,16 @@ import java.util.Objects;
 
 import static ru.javawebinar.webapp.util.DateUtil.NOW;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Company implements Serializable {
     public static final long serialVersionUID = 1L;
 
-    private final String website;
-    private final String name;
-    private final List<Period> periods;
+    private String website;
+    private String name;
+    private List<Period> periods;
+
+    public Company() {
+    }
 
     public Company(String website, String name, Period... periods) {
         this(website, name, Arrays.asList(periods));
@@ -71,11 +79,17 @@ public class Company implements Serializable {
                 '}';
     }
 
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class Period implements Serializable {
-        private final LocalDate startDate;
-        private final LocalDate endDate;
-        private final String title;
-        private final String description;
+        @XmlJavaTypeAdapter(LocalDateAdapter.class)
+        private LocalDate startDate;
+        @XmlJavaTypeAdapter(LocalDateAdapter.class)
+        private LocalDate endDate;
+        private String title;
+        private String description;
+
+        public Period() {
+        }
 
         public Period(int startYear, Month startMonth, String title, String description) {
             this(DateUtil.of(startYear, startMonth), NOW, title, description);

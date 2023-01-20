@@ -112,7 +112,7 @@ public class ResumeTestData {
                 "Интеграция с Twilio, DuoSecurity, Google Authenticator, Jira, Zendesk. ");
 
         section.put(SectionType.PERSONAL, new TextSection("Аналитический склад ума, сильная логика, креативность, " +
-                "инициативность. Пурист кода и архитектуры. "));
+                "инициативность. Пурист кода и архитектуры."));
 
         section.put(SectionType.ACHIEVEMENT, new ListSection(listSection));
 
