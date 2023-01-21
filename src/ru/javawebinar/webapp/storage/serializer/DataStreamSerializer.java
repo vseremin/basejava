@@ -1,15 +1,14 @@
 package ru.javawebinar.webapp.storage.serializer;
 
 import ru.javawebinar.webapp.model.*;
+import ru.javawebinar.webapp.util.LocalDateAdapter;
 
 import java.io.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class DataStreamSerializer implements Serializer {
-    private Resume resume;
 
     @Override
     public void doWrite(Resume r, OutputStream os) throws IOException {
@@ -19,19 +18,45 @@ public class DataStreamSerializer implements Serializer {
             Map<Contacts, String> contacts = r.getContacts();
             dos.writeInt(contacts.size());
             for (Map.Entry<Contacts, String> entry : contacts.entrySet()) {
-                writeTextSection(dos, entry.getKey().name(), entry.getValue());
+                dos.writeUTF(entry.getKey().name());
+                dos.writeUTF(entry.getValue());
             }
 
             Map<SectionType, AbstractSection> section = r.getSection();
             dos.writeInt(section.size());
 
             for (Map.Entry<SectionType, AbstractSection> entry : section.entrySet()) {
-                if (entry.getValue().getClass().getName().contains("TextSection")) {
-                    writeTextSection(dos, entry.getKey().name(), String.valueOf(entry.getValue()));
-                } else if (entry.getValue().getClass().getName().contains("ListSection")) {
-                    writeListSection(dos, entry.getKey().name(), ((ListSection) entry.getValue()).getList());
-                } else if (entry.getValue().getClass().getName().contains("CompanySection")) {
-                    writeCompanySection(dos, entry.getKey().name(), ((CompanySection) entry.getValue()).getCompanies());
+                dos.writeUTF(entry.getKey().name());
+                switch (entry.getKey()) {
+                    case PERSONAL, OBJECTIVE -> dos.writeUTF(String.valueOf(entry.getValue()));
+                    case ACHIEVEMENT, QUALIFICATIONS -> writeList(dos, ((ListSection) entry.getValue()).getList(),
+                            (t) -> {
+                                try {
+                                    dos.writeUTF((String) t);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                    case EDUCATION, EXPERIENCE ->
+                            writeList(dos, ((CompanySection) entry.getValue()).getCompanies(), (t) -> {
+                                try {
+                                    dos.writeUTF(((Company) t).getWebsite());
+                                    dos.writeUTF(((Company) t).getName());
+                                    writeList(dos, ((Company) t).getPeriods(), (s) -> {
+                                        try {
+                                            dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
+                                            dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getEndDate()));
+                                            dos.writeUTF(((Company.Period) s).getTitle());
+                                            dos.writeUTF(((Company.Period) s).getDescription());
+                                        } catch (Exception e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+
+                            });
                 }
             }
         }
@@ -42,7 +67,7 @@ public class DataStreamSerializer implements Serializer {
         try (DataInputStream dis = new DataInputStream(is)) {
             String uuid = dis.readUTF();
             String fullName = dis.readUTF();
-            resume = new Resume(fullName, uuid);
+            Resume resume = new Resume(fullName, uuid);
             int size = dis.readInt();
             for (int i = 0; i < size; i++) {
                 resume.addContact(Contacts.valueOf(dis.readUTF()), dis.readUTF());
@@ -51,12 +76,34 @@ public class DataStreamSerializer implements Serializer {
             int sizeSection = dis.readInt();
             for (int i = 0; i < sizeSection; i++) {
                 String sectionType = dis.readUTF();
-                if (sectionType.equals("PERSONAL") || sectionType.equals("OBJECTIVE")) {
-                    readTextSection(dis, sectionType);
-                } else if (sectionType.equals("ACHIEVEMENT") || sectionType.equals("QUALIFICATIONS")) {
-                    readListSection(dis, sectionType);
-                } else if (sectionType.equals("EXPERIENCE") || sectionType.equals("EDUCATION")) {
-                    readCompanySection(dis, sectionType);
+                switch (SectionType.valueOf(sectionType)) {
+                    case PERSONAL, OBJECTIVE -> resume.addSections(SectionType.valueOf(sectionType),
+                            new TextSection(dis.readUTF()));
+                    case ACHIEVEMENT, QUALIFICATIONS -> resume.addSections(SectionType.valueOf(sectionType),
+                            new ListSection(readList(dis, () -> {
+                                try {
+                                    return dis.readUTF();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })));
+                    case EDUCATION, EXPERIENCE -> resume.addSections(SectionType.valueOf(sectionType),
+                            new CompanySection(readList(dis, () -> {
+                                try {
+                                    return new Company(dis.readUTF(), dis.readUTF(), readList(dis, () -> {
+                                                try {
+                                                    return (new Company.Period(new LocalDateAdapter()
+                                                            .unmarshal(dis.readUTF()), new LocalDateAdapter()
+                                                            .unmarshal(dis.readUTF()), dis.readUTF(), dis.readUTF()));
+                                                } catch (Exception e) {
+                                                    throw new RuntimeException(e);
+                                                }
+                                            }
+                                    ));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })));
                 }
             }
             return resume;
@@ -64,29 +111,11 @@ public class DataStreamSerializer implements Serializer {
 
     }
 
-    private void writeTextSection(DataOutputStream dos, String name, String value) {
+    private <T> void writeList(DataOutputStream dos, List<T> value, Writer writer) {
         try {
-            dos.writeUTF(name);
-            dos.writeUTF(value);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void readTextSection(DataInputStream dis, String sectionName) {
-        try {
-            resume.addSections(SectionType.valueOf(sectionName), new TextSection(dis.readUTF()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void writeListSection(DataOutputStream dos, String name, List<String> value) {
-        try {
-            dos.writeUTF(name);
             dos.writeInt(value.size());
-            for (String str : value) {
-                dos.writeUTF(str);
+            for (T t : value) {
+                writer.write(t);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -94,59 +123,24 @@ public class DataStreamSerializer implements Serializer {
 
     }
 
-    private void readListSection(DataInputStream dis, String sectionType) {
-        List<String> list = new ArrayList<>();
-        int sizeList = 0;
+    private <T> List readList(DataInputStream dis, Reader<T> reader) {
+        List<T> list = new ArrayList<>();
         try {
-            sizeList = dis.readInt();
+            int sizeList = dis.readInt();
             for (int j = 0; j < sizeList; j++) {
-                list.add(dis.readUTF());
+                list.add(reader.read());
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        resume.addSections(SectionType.valueOf(sectionType), new ListSection(list));
-    }
-
-    private void writeCompanySection(DataOutputStream dos, String name, List<Company> value) {
-        try {
-            dos.writeUTF(name);
-            dos.writeInt(value.size());
-            for (Company company : value) {
-                dos.writeUTF(company.getWebsite());
-                dos.writeUTF(company.getName());
-                dos.writeInt(company.getPeriods().size());
-                for (Company.Period period : company.getPeriods()) {
-                    dos.writeLong(period.getStartDate().toEpochDay());
-                    dos.writeLong(period.getEndDate().toEpochDay());
-                    dos.writeUTF(period.getTitle());
-                    dos.writeUTF(period.getDescription());
-                }
-            }
+            return list;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void readCompanySection(DataInputStream dis, String sectionType) {
-        try {
-            List<Company> listCompany = new ArrayList<>();
-            int sizeCompany = dis.readInt();
-            System.out.println("3 " + sectionType);
-            for (int j = 0; j < sizeCompany; j++) {
-                String website = dis.readUTF();
-                String companyName = dis.readUTF();
-                int sizePeriod = dis.readInt();
-                List<Company.Period> periods = new ArrayList<>();
-                for (int k = 0; k < sizePeriod; k++) {
-                    periods.add(new Company.Period(LocalDate.ofEpochDay(dis.readLong()), LocalDate.ofEpochDay(dis.readLong()), dis.readUTF(), dis.readUTF()));
-                }
-                listCompany.add(new Company(website, companyName, periods));
-            }
+    public interface Reader<T> {
+        T read();
+    }
 
-            resume.addSections(SectionType.valueOf(sectionType), new CompanySection(listCompany));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public interface Writer<T> {
+        void write(T t);
     }
 }
