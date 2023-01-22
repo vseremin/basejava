@@ -13,8 +13,8 @@ public class DataStreamSerializer implements Serializer {
     @Override
     public void doWrite(Resume r, OutputStream os) throws IOException {
         try (DataOutputStream dos = new DataOutputStream(os)) {
-            dos.writeUTF(r.getUuid());
             dos.writeUTF(r.getFullName());
+            dos.writeUTF(r.getUuid());
             Map<Contacts, String> contacts = r.getContacts();
             dos.writeInt(contacts.size());
             for (Map.Entry<Contacts, String> entry : contacts.entrySet()) {
@@ -28,34 +28,24 @@ public class DataStreamSerializer implements Serializer {
             for (Map.Entry<SectionType, AbstractSection> entry : section.entrySet()) {
                 dos.writeUTF(entry.getKey().name());
                 switch (entry.getKey()) {
-                    case PERSONAL, OBJECTIVE -> dos.writeUTF(String.valueOf(entry.getValue()));
+                    case PERSONAL, OBJECTIVE -> writeText(String.valueOf(entry.getValue()),
+                            (t) -> dos.writeUTF((String) t));
                     case ACHIEVEMENT, QUALIFICATIONS -> writeList(dos, ((ListSection) entry.getValue()).getList(),
-                            (t) -> {
-                                try {
-                                    dos.writeUTF((String) t);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                            (t) -> dos.writeUTF((String) t));
                     case EDUCATION, EXPERIENCE ->
                             writeList(dos, ((CompanySection) entry.getValue()).getCompanies(), (t) -> {
-                                try {
-                                    dos.writeUTF(((Company) t).getWebsite());
-                                    dos.writeUTF(((Company) t).getName());
-                                    writeList(dos, ((Company) t).getPeriods(), (s) -> {
-                                        try {
-                                            dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
-                                            dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getEndDate()));
-                                            dos.writeUTF(((Company.Period) s).getTitle());
-                                            dos.writeUTF(((Company.Period) s).getDescription());
-                                        } catch (Exception e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    });
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-
+                                dos.writeUTF(((Company) t).getWebsite());
+                                dos.writeUTF(((Company) t).getName());
+                                writeList(dos, ((Company) t).getPeriods(), (s) -> {
+                                    try {
+                                        dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
+                                        dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getEndDate()));
+                                        dos.writeUTF(((Company.Period) s).getTitle());
+                                        dos.writeUTF(((Company.Period) s).getDescription());
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
                             });
                 }
             }
@@ -65,9 +55,7 @@ public class DataStreamSerializer implements Serializer {
     @Override
     public Resume doRead(InputStream is) throws IOException {
         try (DataInputStream dis = new DataInputStream(is)) {
-            String uuid = dis.readUTF();
-            String fullName = dis.readUTF();
-            Resume resume = new Resume(fullName, uuid);
+            Resume resume = new Resume(dis.readUTF(), dis.readUTF());
             int size = dis.readInt();
             for (int i = 0; i < size; i++) {
                 resume.addContact(Contacts.valueOf(dis.readUTF()), dis.readUTF());
@@ -75,22 +63,15 @@ public class DataStreamSerializer implements Serializer {
 
             int sizeSection = dis.readInt();
             for (int i = 0; i < sizeSection; i++) {
-                String sectionType = dis.readUTF();
+                String sectionType = readText(dis::readUTF);
                 switch (SectionType.valueOf(sectionType)) {
                     case PERSONAL, OBJECTIVE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new TextSection(dis.readUTF()));
+                            new TextSection(readText(dis::readUTF)));
                     case ACHIEVEMENT, QUALIFICATIONS -> resume.addSections(SectionType.valueOf(sectionType),
-                            new ListSection(readList(dis, () -> {
-                                try {
-                                    return dis.readUTF();
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })));
+                            new ListSection(readList(dis, dis::readUTF)));
                     case EDUCATION, EXPERIENCE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new CompanySection(readList(dis, () -> {
-                                try {
-                                    return new Company(dis.readUTF(), dis.readUTF(), readList(dis, () -> {
+                            new CompanySection(readList(dis, () ->
+                                    new Company(dis.readUTF(), dis.readUTF(), readList(dis, () -> {
                                                 try {
                                                     return (new Company.Period(new LocalDateAdapter()
                                                             .unmarshal(dis.readUTF()), new LocalDateAdapter()
@@ -99,11 +80,8 @@ public class DataStreamSerializer implements Serializer {
                                                     throw new RuntimeException(e);
                                                 }
                                             }
-                                    ));
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })));
+                                    ))
+                            )));
                 }
             }
             return resume;
@@ -111,36 +89,44 @@ public class DataStreamSerializer implements Serializer {
 
     }
 
-    private <T> void writeList(DataOutputStream dos, List<T> value, Writer writer) {
-        try {
-            dos.writeInt(value.size());
-            for (T t : value) {
-                writer.write(t);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+    private void writeText(String text, TextWriter writer) throws IOException {
+        writer.write(text);
     }
 
-    private <T> List readList(DataInputStream dis, Reader<T> reader) {
-        List<T> list = new ArrayList<>();
-        try {
-            int sizeList = dis.readInt();
-            for (int j = 0; j < sizeList; j++) {
-                list.add(reader.read());
-            }
-            return list;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    private <T> String readText(TextReader<T> reader) throws IOException {
+        return String.valueOf(reader.read());
+    }
+
+    private <T> void writeList(DataOutputStream dos, List<T> value, Writer writer) throws IOException {
+        dos.writeInt(value.size());
+        for (T t : value) {
+            writer.write(t);
         }
+    }
+
+    private <T> List readList(DataInputStream dis, Reader<T> reader) throws IOException {
+        List<T> list = new ArrayList<>();
+        int sizeList = dis.readInt();
+        for (int j = 0; j < sizeList; j++) {
+            list.add(reader.read());
+        }
+        return list;
+    }
+
+    public interface TextReader<T> {
+        T read() throws IOException;
+    }
+
+    public interface TextWriter<T> {
+        void write(T t) throws IOException;
     }
 
     public interface Reader<T> {
-        T read();
+        T read() throws IOException;
     }
 
     public interface Writer<T> {
-        void write(T t);
+        void write(T t) throws IOException;
     }
+
 }
