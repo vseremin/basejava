@@ -4,10 +4,7 @@ import ru.javawebinar.webapp.model.*;
 import ru.javawebinar.webapp.util.LocalDateAdapter;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataStreamSerializer implements Serializer {
 
@@ -38,7 +35,8 @@ public class DataStreamSerializer implements Serializer {
                                 dos.writeUTF(((Company) t).getName());
                                 writeWithException(dos, ((Company) t).getPeriods(), (s) -> {
                                     try {
-                                        dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
+                                        dos.writeUTF(
+                                                new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
                                         dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getEndDate()));
                                         dos.writeUTF(((Company.Period) s).getTitle());
                                         dos.writeUTF(((Company.Period) s).getDescription());
@@ -56,38 +54,41 @@ public class DataStreamSerializer implements Serializer {
     public Resume doRead(InputStream is) throws IOException {
         try (DataInputStream dis = new DataInputStream(is)) {
             Resume resume = new Resume(dis.readUTF(), dis.readUTF());
-            int size = dis.readInt();
-            for (int i = 0; i < size; i++) {
+            readSection(dis, () -> {
                 resume.addContact(Contacts.valueOf(dis.readUTF()), dis.readUTF());
-            }
+                return null;
+            });
 
-            int sizeSection = dis.readInt();
-            for (int i = 0; i < sizeSection; i++) {
+            readSection(dis, () -> {
                 String sectionType = readText(dis::readUTF);
                 switch (SectionType.valueOf(sectionType)) {
                     case PERSONAL, OBJECTIVE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new TextSection(readText(dis::readUTF)));
+                            new TextSection(readText(() -> dis.readUTF())));
                     case ACHIEVEMENT, QUALIFICATIONS -> resume.addSections(SectionType.valueOf(sectionType),
-                            new ListSection(readList(dis, dis::readUTF)));
+                            new ListSection((List<String>) readList(dis, () -> dis.readUTF())));
                     case EDUCATION, EXPERIENCE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new CompanySection(readList(dis, () ->
-                                    new Company(dis.readUTF(), dis.readUTF(), readList(dis, () -> {
-                                                try {
-                                                    return (new Company.Period(new LocalDateAdapter()
-                                                            .unmarshal(dis.readUTF()), new LocalDateAdapter()
-                                                            .unmarshal(dis.readUTF()), dis.readUTF(), dis.readUTF()));
-                                                } catch (Exception e) {
-                                                    throw new RuntimeException(e);
-                                                }
-                                            }
-                                    ))
+                            new CompanySection((List<Company>) readList(dis, () ->
+                                    new Company(dis.readUTF(), dis.readUTF(),
+                                            (List<Company.Period>) readList(dis, () -> {
+                                                        try {
+                                                            return (new Company.Period(new LocalDateAdapter()
+                                                                    .unmarshal(dis.readUTF()), new LocalDateAdapter()
+                                                                    .unmarshal(dis.readUTF()),
+                                                                    dis.readUTF(), dis.readUTF()));
+                                                        } catch (Exception e) {
+                                                            throw new RuntimeException(e);
+                                                        }
+                                                    }
+                                            ))
                             )));
                 }
-            }
+                return null;
+            });
             return resume;
         }
 
     }
+
 
     private void writeText(String text, TextWriter writer) throws IOException {
         writer.write(text);
@@ -101,6 +102,13 @@ public class DataStreamSerializer implements Serializer {
         dos.writeInt(value.size());
         for (T t : value) {
             writer.write(t);
+        }
+    }
+
+    private <T> void readSection(DataInputStream dis, Reader<T> reader) throws IOException {
+        int sizeList = dis.readInt();
+        for (int i = 0; i < sizeList; i++) {
+            reader.read();
         }
     }
 
