@@ -5,6 +5,7 @@ import ru.javawebinar.webapp.util.LocalDateAdapter;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -15,28 +16,27 @@ public class DataStreamSerializer implements Serializer {
         try (DataOutputStream dos = new DataOutputStream(os)) {
             dos.writeUTF(r.getFullName());
             dos.writeUTF(r.getUuid());
-            Map<Contacts, String> contacts = r.getContacts();
-            dos.writeInt(contacts.size());
-            for (Map.Entry<Contacts, String> entry : contacts.entrySet()) {
-                dos.writeUTF(entry.getKey().name());
-                dos.writeUTF(entry.getValue());
-            }
+            writeWithException(dos, r.getContacts().entrySet(), (t) -> {
+                dos.writeUTF(((Map.Entry<Contacts, String>) t).getKey().name());
+                dos.writeUTF(((Map.Entry<Contacts, String>) t).getValue());
+            });
 
-            Map<SectionType, AbstractSection> section = r.getSection();
-            dos.writeInt(section.size());
-
-            for (Map.Entry<SectionType, AbstractSection> entry : section.entrySet()) {
-                dos.writeUTF(entry.getKey().name());
-                switch (entry.getKey()) {
-                    case PERSONAL, OBJECTIVE -> writeText(String.valueOf(entry.getValue()),
+            writeWithException(dos, r.getSection().entrySet(), (v) -> {
+                dos.writeUTF(((Map.Entry<SectionType, AbstractSection>) v).getKey().name());
+                switch (((Map.Entry<SectionType, AbstractSection>) v).getKey()) {
+                    case PERSONAL, OBJECTIVE ->
+                            writeText(String.valueOf(((Map.Entry<SectionType, AbstractSection>) v).getValue()),
+                                    (t) -> dos.writeUTF((String) t));
+                    case ACHIEVEMENT, QUALIFICATIONS -> writeWithException(dos,
+                            ((ListSection) ((Map.Entry<SectionType, AbstractSection>) v).getValue()).getList(),
                             (t) -> dos.writeUTF((String) t));
-                    case ACHIEVEMENT, QUALIFICATIONS -> writeList(dos, ((ListSection) entry.getValue()).getList(),
-                            (t) -> dos.writeUTF((String) t));
-                    case EDUCATION, EXPERIENCE ->
-                            writeList(dos, ((CompanySection) entry.getValue()).getCompanies(), (t) -> {
+                    case EDUCATION, EXPERIENCE -> writeWithException(dos,
+                            ((CompanySection)
+                                    ((Map.Entry<SectionType, AbstractSection>) v).getValue()).getCompanies(),
+                            (t) -> {
                                 dos.writeUTF(((Company) t).getWebsite());
                                 dos.writeUTF(((Company) t).getName());
-                                writeList(dos, ((Company) t).getPeriods(), (s) -> {
+                                writeWithException(dos, ((Company) t).getPeriods(), (s) -> {
                                     try {
                                         dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getStartDate()));
                                         dos.writeUTF(new LocalDateAdapter().marshal(((Company.Period) s).getEndDate()));
@@ -48,7 +48,7 @@ public class DataStreamSerializer implements Serializer {
                                 });
                             });
                 }
-            }
+            });
         }
     }
 
@@ -97,7 +97,7 @@ public class DataStreamSerializer implements Serializer {
         return String.valueOf(reader.read());
     }
 
-    private <T> void writeList(DataOutputStream dos, List<T> value, Writer writer) throws IOException {
+    private <T> void writeWithException(DataOutputStream dos, Collection<T> value, Writer writer) throws IOException {
         dos.writeInt(value.size());
         for (T t : value) {
             writer.write(t);
