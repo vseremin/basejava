@@ -63,9 +63,9 @@ public class DataStreamSerializer implements Serializer {
                 String sectionType = readText(dis::readUTF);
                 switch (SectionType.valueOf(sectionType)) {
                     case PERSONAL, OBJECTIVE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new TextSection(readText(() -> dis.readUTF())));
+                            new TextSection(readText(dis::readUTF)));
                     case ACHIEVEMENT, QUALIFICATIONS -> resume.addSections(SectionType.valueOf(sectionType),
-                            new ListSection((List<String>) readList(dis, () -> dis.readUTF())));
+                            new ListSection((List<String>) readList(dis, dis::readUTF)));
                     case EDUCATION, EXPERIENCE -> resume.addSections(SectionType.valueOf(sectionType),
                             new CompanySection((List<Company>) readList(dis, () ->
                                     new Company(dis.readUTF(), dis.readUTF(),
