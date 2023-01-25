@@ -19,18 +19,16 @@ public class DataStreamSerializer implements Serializer {
             });
 
             writeWithException(dos, r.getSection().entrySet(), (v) -> {
-                dos.writeUTF(((Map.Entry<SectionType, AbstractSection>) v).getKey().name());
-                switch (((Map.Entry<SectionType, AbstractSection>) v).getKey()) {
+                SectionType sectionType = ((Map.Entry<SectionType, AbstractSection>) v).getKey();
+                AbstractSection section = ((Map.Entry<SectionType, AbstractSection>) v).getValue();
+                dos.writeUTF(sectionType.name());
+                switch (sectionType) {
                     case PERSONAL, OBJECTIVE ->
-                            writeText(String.valueOf(((Map.Entry<SectionType, AbstractSection>) v).getValue()),
-                                    (t) -> dos.writeUTF((String) t));
+                            dos.writeUTF(String.valueOf(section));
                     case ACHIEVEMENT, QUALIFICATIONS -> writeWithException(dos,
-                            ((ListSection) ((Map.Entry<SectionType, AbstractSection>) v).getValue()).getList(),
-                            (t) -> dos.writeUTF((String) t));
+                            ((ListSection) section).getList(), (t) -> dos.writeUTF((String) t));
                     case EDUCATION, EXPERIENCE -> writeWithException(dos,
-                            ((CompanySection)
-                                    ((Map.Entry<SectionType, AbstractSection>) v).getValue()).getCompanies(),
-                            (t) -> {
+                            ((CompanySection) section).getCompanies(), (t) -> {
                                 dos.writeUTF(((Company) t).getWebsite());
                                 dos.writeUTF(((Company) t).getName());
                                 writeWithException(dos, ((Company) t).getPeriods(), (s) -> {
@@ -60,10 +58,10 @@ public class DataStreamSerializer implements Serializer {
             });
 
             readSection(dis, () -> {
-                String sectionType = readText(dis::readUTF);
+                String sectionType = dis.readUTF();
                 switch (SectionType.valueOf(sectionType)) {
                     case PERSONAL, OBJECTIVE -> resume.addSections(SectionType.valueOf(sectionType),
-                            new TextSection(readText(dis::readUTF)));
+                            new TextSection(dis.readUTF()));
                     case ACHIEVEMENT, QUALIFICATIONS -> resume.addSections(SectionType.valueOf(sectionType),
                             new ListSection((List<String>) readList(dis, dis::readUTF)));
                     case EDUCATION, EXPERIENCE -> resume.addSections(SectionType.valueOf(sectionType),
@@ -86,16 +84,6 @@ public class DataStreamSerializer implements Serializer {
             });
             return resume;
         }
-
-    }
-
-
-    private void writeText(String text, TextWriter writer) throws IOException {
-        writer.write(text);
-    }
-
-    private <T> String readText(TextReader<T> reader) throws IOException {
-        return String.valueOf(reader.read());
     }
 
     private <T> void writeWithException(DataOutputStream dos, Collection<T> value, Writer writer) throws IOException {
@@ -121,14 +109,6 @@ public class DataStreamSerializer implements Serializer {
         return list;
     }
 
-    public interface TextReader<T> {
-        T read() throws IOException;
-    }
-
-    public interface TextWriter<T> {
-        void write(T t) throws IOException;
-    }
-
     public interface Reader<T> {
         T read() throws IOException;
     }
@@ -136,5 +116,4 @@ public class DataStreamSerializer implements Serializer {
     public interface Writer<T> {
         void write(T t) throws IOException;
     }
-
 }
