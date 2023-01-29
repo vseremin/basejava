@@ -46,35 +46,8 @@ public class MainConcurrency {
         System.out.println(mainConcurrency.counter);
         LazySingleton.getInstance();
 
-        new Thread(() -> {
-            synchronized (LOCK) {
-                System.out.println(Thread.currentThread().getName() + " is running");
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                synchronized (LOCK_2) {
-                    System.out.println("You won't see it");
-                }
-            }
-        }).start();
-
-        new Thread(() -> {
-            synchronized (LOCK_2) {
-                System.out.println(Thread.currentThread().getName() + " is running");
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                synchronized (LOCK) {
-                    System.out.println("You won't see it");
-                }
-            }
-        }).start();
-
-
+        implementationDeadlock(LOCK, LOCK_2);
+        implementationDeadlock(LOCK_2, LOCK);
     }
 
     private synchronized void inc() {
@@ -87,5 +60,19 @@ public class MainConcurrency {
 
     }
 
-
+    private static void implementationDeadlock(Object lock1, Object lock2) {
+        new Thread(() -> {
+            synchronized (lock1) {
+                System.out.println(Thread.currentThread().getName() + " is running");
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                synchronized (lock2) {
+                    System.out.println("You won't see it");
+                }
+            }
+        }).start();
+    }
 }
