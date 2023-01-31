@@ -1,4 +1,4 @@
-package ru.javawebinar.webapp.util;
+package ru.javawebinar.webapp;
 
 import java.util.Arrays;
 import java.util.List;
