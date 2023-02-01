@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class MainStreams {
     public static void main(String[] args) {
-        int[] arr1 = {1, 2, 3, 3, 2, 3};
+        int[] arr1 = {1, 2, 3, 3, 2, 4};
         System.out.println(minValue(arr1));
         int[] arr2 = {9, 8};
         System.out.println(minValue(arr2));
@@ -20,8 +20,7 @@ public class MainStreams {
         return Arrays.stream(values)
                 .distinct()
                 .sorted()
-                .reduce((s, x) -> (s * 10) + x).
-                getAsInt();
+                .reduce(0, (s, x) -> (s * 10) + x);
     }
 
     static List<Integer> oddOrEven(List<Integer> integers) {
