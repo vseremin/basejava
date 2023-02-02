@@ -46,7 +46,7 @@ public class SqlStorage implements Storage {
 
     @Override
     public Resume get(String uuid) {
-        return (Resume) sqlHelper.connecting("SELECT * FROM resume r WHERE  r.uuid =?", ps -> {
+        return sqlHelper.connecting("SELECT * FROM resume r WHERE  r.uuid =?", ps -> {
             ps.setString(1, uuid);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
@@ -58,7 +58,6 @@ public class SqlStorage implements Storage {
 
     @Override
     public void delete(String uuid) {
-        get(uuid);
         sqlHelper.connecting("DELETE FROM resume WHERE uuid =?", ps -> {
             ps.setString(1, uuid);
             if (ps.executeUpdate() == 0) {
@@ -70,11 +69,11 @@ public class SqlStorage implements Storage {
 
     @Override
     public List<Resume> getAllSorted() {
-        return (List<Resume>) sqlHelper.connecting("SELECT * FROM resume ORDER BY  uuid, full_name", ps -> {
+        return sqlHelper.connecting("SELECT * FROM resume ORDER BY full_name, uuid", ps -> {
             ResultSet rs = ps.executeQuery();
             List<Resume> resumes = new ArrayList<>();
             while (rs.next()) {
-                resumes.add(new Resume(rs.getString(2), rs.getString(1).trim()));
+                resumes.add(new Resume(rs.getString(2), rs.getString(1)));
             }
             return resumes;
         });
@@ -82,7 +81,7 @@ public class SqlStorage implements Storage {
 
     @Override
     public int size() {
-        return (int) sqlHelper.connecting("SELECT COUNT(*) FROM resume", ps -> {
+        return sqlHelper.connecting("SELECT COUNT(*) FROM resume", ps -> {
             ResultSet rs = ps.executeQuery();
             rs.next();
             return rs.getInt(1);

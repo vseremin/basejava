@@ -9,6 +9,7 @@ import ru.javawebinar.webapp.exception.NotExistStorageException;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.io.File;
+import java.util.UUID;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -17,22 +18,22 @@ public class AbstractStorageTest {
     protected static final String STORAGE_STRING_DIR = Config.getInstance().getPathStorageDir();
     protected static final File STORAGE_DIR = new File(Config.getInstance().getPathStorageDir());
     protected static Storage storage;
-    protected static final String UUID_1 = "uuid1";
+    protected static final String UUID_1 = String.valueOf(UUID.randomUUID());
     public static final String NAME_1 = "1";
     private static final Resume RESUME_1 = new Resume(NAME_1, UUID_1);//new ResumeTestData().init(NAME_1, UUID_1);//
 
     public static final String NAME_2 = "2";
-    protected static final String UUID_2 = "uuid2";
+    protected static final String UUID_2 = String.valueOf(UUID.randomUUID());
     private static final Resume RESUME_2 = new Resume(NAME_2, UUID_2);//new ResumeTestData().init(NAME_2, UUID_2);//
 
     public static final String NAME_3 = "2";
-    protected static final String UUID_3 = "uuid3";
+    protected static final String UUID_3 = String.valueOf(UUID.randomUUID());
     private static final Resume RESUME_3 = new Resume(NAME_3, UUID_3);//new ResumeTestData().init(NAME_3, UUID_3);//
 
     public static final String NAME_4 = "";
-    private static final String UUID_4 = "uuid4";
+    private static final String UUID_4 = String.valueOf(UUID.randomUUID());
     protected static final Resume RESUME_4 = new Resume(NAME_4, UUID_4);//new ResumeTestData().init(NAME_4, UUID_4);//
-    private static final String UUID_NOT_EXIST = "dummy";
+    private static final String UUID_NOT_EXIST = String.valueOf(UUID.randomUUID());
 
     public AbstractStorageTest(Storage storage) {
         AbstractStorageTest.storage = storage;

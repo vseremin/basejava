@@ -16,21 +16,21 @@ public class SqlHelper {
         connectionFactory = () -> DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
-    public Object connecting(String query, Strategy strategy) {
-        Object o;
+    public <T> T connecting(String query, SqlExecutor<T> sqlExecutor) {
+        T t;
         try (Connection conn = connectionFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
-            o = strategy.execute(ps);
+            t = sqlExecutor.execute(ps);
         } catch (SQLException e) {
             if (e.getSQLState().equals("23505")) {
                 throw new ExistStorageException(e);
             }
             throw new StorageException(e);
         }
-        return o;
+        return t;
     }
 
-    public interface Strategy<T> {
+    public interface SqlExecutor<T> {
         T execute(PreparedStatement ps) throws SQLException;
     }
 }
