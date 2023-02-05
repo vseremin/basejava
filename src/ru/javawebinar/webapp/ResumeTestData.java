@@ -89,8 +89,8 @@ public class ResumeTestData {
 
     public Resume init(String fullName, String uuid) {
         EnumMap<Contacts, String> contacts = new EnumMap<>(Contacts.class);
-
-        contacts.put(Contacts.TELEPHONE, "+7(999) 888-8888");
+        String telephone = "+7(999) 888-" + Math.abs(new Random().nextInt() % 10000);
+        contacts.put(Contacts.TELEPHONE, telephone);
         contacts.put(Contacts.SKYPE, "skype.test");
         contacts.put(Contacts.GITHUB, "https://github.com/");
         contacts.put(Contacts.MAIL, "yandex@yandex.ru");

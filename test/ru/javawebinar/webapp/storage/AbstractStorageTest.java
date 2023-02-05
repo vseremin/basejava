@@ -7,6 +7,7 @@ import ru.javawebinar.webapp.Config;
 import ru.javawebinar.webapp.ResumeTestData;
 import ru.javawebinar.webapp.exception.ExistStorageException;
 import ru.javawebinar.webapp.exception.NotExistStorageException;
+import ru.javawebinar.webapp.model.Contacts;
 import ru.javawebinar.webapp.model.Resume;
 
 import java.io.File;
@@ -22,7 +23,6 @@ public class AbstractStorageTest {
     protected static final String UUID_1 = String.valueOf(UUID.randomUUID());
     public static final String NAME_1 = "name1";
     private static final Resume RESUME_1 = new ResumeTestData().init(NAME_1, UUID_1);//new Resume(NAME_1, UUID_1);//
-
     public static final String NAME_2 = "name2";
     protected static final String UUID_2 = String.valueOf(UUID.randomUUID());
     private static final Resume RESUME_2 = new ResumeTestData().init(NAME_2, UUID_2);//new Resume(NAME_2, UUID_2);//
@@ -70,6 +70,7 @@ public class AbstractStorageTest {
     @Test
     public void update() {
         Resume resume = new Resume(NAME_1, UUID_1);
+        resume.addContact(Contacts.TELEPHONE, "777");
         storage.update(resume);
         assertEquals(resume, storage.get(UUID_1));
     }
