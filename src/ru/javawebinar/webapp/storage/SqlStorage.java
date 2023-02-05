@@ -5,7 +5,10 @@ import ru.javawebinar.webapp.model.Contacts;
 import ru.javawebinar.webapp.model.Resume;
 import ru.javawebinar.webapp.sql.SqlHelper;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class SqlStorage implements Storage {
@@ -32,21 +35,14 @@ public class SqlStorage implements Storage {
     @Override
     public void update(Resume resume) {
         sqlHelper.transactionalExecute(conn -> {
-            try (PreparedStatement ps = conn.prepareStatement("UPDATE resume " +
-                    "SET full_name = (?) WHERE uuid = (?)")) {
-                if (saveName(ps, resume) == 0) {
-                    throw new NotExistStorageException(resume.getUuid());
-                }
+            if (saveName("UPDATE resume SET full_name = (?) WHERE uuid = (?)", conn, resume) == 0) {
+                throw new NotExistStorageException(resume.getUuid());
             }
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM contact WHERE resume_uuid = ?")) {
                 ps.setString(1, resume.getUuid());
                 ps.execute();
             }
-            try (PreparedStatement ps = conn.prepareStatement("INSERT INTO contact " +
-                    "(resume_uuid, type, value) VALUES (?,?,?)")) {
-                saveContact(ps, resume);
-            }
-
+            saveContact(conn, resume);
             return null;
         });
     }
@@ -54,18 +50,13 @@ public class SqlStorage implements Storage {
     @Override
     public void save(Resume r) {
         sqlHelper.transactionalExecute(conn -> {
-                    try (PreparedStatement ps = conn.prepareStatement("INSERT INTO resume " +
-                            "(full_name, uuid) VALUES (?,?)")) {
-                        saveName(ps, r);
-                    }
-                    try (PreparedStatement ps = conn.prepareStatement("INSERT INTO contact " +
-                            "(resume_uuid, type, value) VALUES (?,?,?)")) {
-                        saveContact(ps, r);
-                    }
+                    saveName("INSERT INTO resume (full_name, uuid) VALUES (?,?)", conn, r);
+                    saveContact(conn, r);
                     return null;
                 }
         );
     }
+
 
     @Override
     public Resume get(String uuid) {
@@ -80,7 +71,9 @@ public class SqlStorage implements Storage {
                     if (!rs.next()) {
                         throw new NotExistStorageException(uuid);
                     }
-                    return addResume(rs, uuid);
+                    Resume r = new Resume(rs.getString("full_name"), uuid);
+                    addContact(rs, r);
+                    return r;
                 });
     }
 
@@ -98,14 +91,23 @@ public class SqlStorage implements Storage {
     @Override
     public List<Resume> getAllSorted() {
         List<Resume> resumes = new ArrayList<>();
-        sqlHelper.connecting("SELECT * FROM resume",
-                ps -> {
+        sqlHelper.transactionalExecute(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM resume r ORDER BY full_name, uuid")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    resumes.add(new Resume(rs.getString(2), rs.getString(1)));
+                }
+            }
+            for (Resume resume : resumes) {
+                try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM contact WHERE resume_uuid = ?")) {
+                    ps.setString(1, resume.getUuid());
                     ResultSet rs = ps.executeQuery();
-                    while (rs.next()) {
-                        resumes.add(get(rs.getString(1)));
-                    }
-                    return null;
-                });
+                    rs.next();
+                    addContact(rs, resume);
+                }
+            }
+            return null;
+        });
         return resumes;
     }
 
@@ -118,30 +120,34 @@ public class SqlStorage implements Storage {
         });
     }
 
-    private void saveContact(PreparedStatement ps, Resume r) throws SQLException {
-        for (Map.Entry<Contacts, String> e : r.getContacts().entrySet()) {
-            ps.setString(1, r.getUuid());
-            ps.setString(2, e.getKey().name());
-            ps.setString(3, e.getValue());
-            ps.addBatch();
+    private void saveContact(Connection conn, Resume r) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO contact " +
+                "(resume_uuid, type, value) VALUES (?,?,?)")) {
+            for (Map.Entry<Contacts, String> e : r.getContacts().entrySet()) {
+                ps.setString(1, r.getUuid());
+                ps.setString(2, e.getKey().name());
+                ps.setString(3, e.getValue());
+                ps.addBatch();
+            }
+            ps.executeBatch();
         }
-        ps.executeBatch();
     }
 
-    private int saveName(PreparedStatement ps, Resume r) throws SQLException {
-        ps.setString(1, r.getFullName());
-        ps.setString(2, r.getUuid());
-        return ps.executeUpdate();
+    private int saveName(String query, Connection conn, Resume r) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, r.getFullName());
+            ps.setString(2, r.getUuid());
+            return ps.executeUpdate();
+        }
     }
 
-    private Resume addResume(ResultSet rs, String uuid) throws SQLException {
-        Resume r = new Resume(rs.getString("full_name"), uuid);
+    private void addContact(ResultSet rs, Resume resume) throws SQLException {
         do {
             String value = rs.getString("value");
             if (value != null) {
-                r.addContact(Contacts.valueOf(rs.getString("type")), value);
+                Contacts type = Contacts.valueOf(rs.getString("type"));
+                resume.addContact(type, value);
             }
         } while (rs.next());
-        return r;
     }
 }
