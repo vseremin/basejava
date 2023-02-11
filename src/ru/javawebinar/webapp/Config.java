@@ -5,7 +5,7 @@ import java.util.Properties;
 
 public class Config {
     private static final Config INSTANCE = new Config();
-    protected static final File PROPS = new File("./storage/resumes.properties");
+    protected static File PROPS;
     private final Properties props = new Properties();
     private final File storageDir;
     private final String dbUrl;
@@ -13,7 +13,8 @@ public class Config {
     private final String dbPassword;
 
     private Config() {
-        try (InputStream is = new FileInputStream("config/resumes.properties")) {
+        PROPS = new File("/home/user/StartJava/Basejava/config/resumes.properties");
+        try (InputStream is = new FileInputStream(PROPS)) {
             props.load(is);
             storageDir = new File(props.getProperty("storage.dir"));
             dbUrl = props.getProperty("db.url");

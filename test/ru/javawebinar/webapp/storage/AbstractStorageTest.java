@@ -71,6 +71,10 @@ public class AbstractStorageTest {
     public void update() {
         Resume resume = new Resume(NAME_1, UUID_1);
         resume.addContact(Contacts.TELEPHONE, "777");
+//        resume.getSection().put(SectionType.PERSONAL, new TextSection("Аналитический склад ума, сильная логика, креативность, " +
+//                "инициативность. Пурист кода и архитектуры."));
+//        resume.getSection().put(SectionType.OBJECTIVE, new TextSection("Ведущий стажировок и корпоративного обучения по Java Web " +
+//                "и Enterprise технологиям"));
         storage.update(resume);
         assertEquals(resume, storage.get(UUID_1));
     }

@@ -168,6 +168,10 @@ public class ResumeTestData {
         for (Map.Entry<Contacts, String> contact : contacts.entrySet()) {
             r.addContact(contact.getKey(), contact.getValue());
         }
+        r.getSection().put(SectionType.PERSONAL, new TextSection("Аналитический склад ума, сильная логика, креативность, " +
+                "инициативность. Пурист кода и архитектуры."));
+        r.getSection().put(SectionType.OBJECTIVE, new TextSection("Ведущий стажировок и корпоративного обучения по Java Web " +
+                "и Enterprise технологиям"));
         return r;
     }
 }
