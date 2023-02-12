@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SqlStorage implements Storage {
     public final SqlHelper sqlHelper;
@@ -34,15 +33,17 @@ public class SqlStorage implements Storage {
     @Override
     public void update(Resume resume) {
         sqlHelper.transactionalExecute(conn -> {
-            if (saveName("UPDATE resume SET full_name = (?) WHERE uuid = (?)", conn, resume) == 0) {
-                throw new NotExistStorageException(resume.getUuid());
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE resume SET full_name = (?) WHERE uuid = (?)")) {
+                ps.setString(1, resume.getFullName());
+                ps.setString(2, resume.getUuid());
+                if (ps.executeUpdate() == 0) {
+                    throw new NotExistStorageException(resume.getUuid());
+                }
             }
             deleteItems(conn, resume.getUuid(), "DELETE FROM contact WHERE resume_uuid = ?");
-            saveSection(conn, resume, resume.getContacts().entrySet(), "INSERT INTO contact " +
-                    "(resume_uuid, type, value) VALUES (?,?,?)");
+            saveContact(conn, resume);
             deleteItems(conn, resume.getUuid(), "DELETE FROM section WHERE resume_uuid = ?");
-            saveSection(conn, resume, resume.getSection().entrySet(), "INSERT INTO section " +
-                    "(resume_uuid, type_section, value_section) VALUES (?,?,?)");
+            saveSection(conn, resume);
             return null;
         });
     }
@@ -50,11 +51,14 @@ public class SqlStorage implements Storage {
     @Override
     public void save(Resume r) {
         sqlHelper.transactionalExecute(conn -> {
-                    saveName("INSERT INTO resume (full_name, uuid) VALUES (?,?)", conn, r);
-                    saveSection(conn, r, r.getContacts().entrySet(), "INSERT INTO contact " +
-                            "(resume_uuid, type, value) VALUES (?,?,?)");
-                    saveSection(conn, r, r.getSection().entrySet(), "INSERT INTO section " +
-                            "(resume_uuid, type_section, value_section) VALUES (?,?,?)");
+                    try (PreparedStatement ps = conn.prepareStatement("INSERT INTO resume " +
+                            "(full_name, uuid) VALUES (?,?)")) {
+                        ps.setString(1, r.getFullName());
+                        ps.setString(2, r.getUuid());
+                        ps.execute();
+                    }
+                    saveContact(conn, r);
+                    saveSection(conn, r);
                     return null;
                 }
         );
@@ -70,11 +74,11 @@ public class SqlStorage implements Storage {
                 return new Resume(o.getString(2), uuid);
             });
             getResult(conn, uuid, "SELECT * FROM contact WHERE resume_uuid = ?", o -> {
-                addItem(o, resume, "value", "type");
+                addContacts(o, resume);
                 return null;
             });
             getResult(conn, uuid, "SELECT * FROM section WHERE resume_uuid = ?", o -> {
-                addItem(o, resume, "value_section", "type_section");
+                addSections(o, resume);
                 return null;
             });
             return resume;
@@ -104,11 +108,11 @@ public class SqlStorage implements Storage {
             }
             for (Resume resume : resumes) {
                 getResult(conn, resume.getUuid(), "SELECT * FROM contact WHERE resume_uuid = ?", o -> {
-                    addItem(o, resume, "value", "type");
+                    addContacts(o, resume);
                     return null;
                 });
                 getResult(conn, resume.getUuid(), "SELECT * FROM section WHERE resume_uuid = ?", o -> {
-                    addItem(o, resume, "value_section", "type_section");
+                    addSections(o, resume);
                     return null;
                 });
             }
@@ -126,11 +130,25 @@ public class SqlStorage implements Storage {
         });
     }
 
-    private <K, V> void saveSection(Connection conn, Resume r, Set<Map.Entry<K, V>> entry, String query) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            for (Map.Entry<K, V> e : entry) {
+    private void saveContact(Connection conn, Resume r) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO contact " +
+                "(resume_uuid, type, value) VALUES (?,?,?)")) {
+            for (Map.Entry<Contacts, String> e : r.getContacts().entrySet()) {
                 ps.setString(1, r.getUuid());
-                ps.setString(2, ((Enum) e.getKey()).name());
+                ps.setString(2, e.getKey().name());
+                ps.setString(3, e.getValue());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private void saveSection(Connection conn, Resume r) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO section " +
+                "(resume_uuid, type_section, value_section) VALUES (?,?,?)")) {
+            for (Map.Entry<SectionType, AbstractSection> e : r.getSection().entrySet()) {
+                ps.setString(1, r.getUuid());
+                ps.setString(2, (e.getKey()).name());
                 ps.setString(3, getSection(e.getValue()));
                 ps.addBatch();
             }
@@ -139,42 +157,37 @@ public class SqlStorage implements Storage {
     }
 
     private <T> String getSection(T section) {
-        if (section instanceof TextSection) {
-            return ((TextSection) section).getText();
-        }
-        if (section instanceof String) {
-            return (String) section;
-        }
-        return ((ListSection) section).getList()
-                .stream().map(Object::toString)
-                .collect(Collectors.joining("\n"));
+        return switch (section.getClass().getSimpleName()) {
+            case "String" -> (String) section;
+            case "TextSection" -> ((TextSection) section).getText();
+            case "ListSection" -> String.join("\n", ((ListSection) section).getList());
+            default -> "";
+        };
     }
 
-    private int saveName(String query, Connection conn, Resume r) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, r.getFullName());
-            ps.setString(2, r.getUuid());
-            return ps.executeUpdate();
-        }
-    }
-
-    private void addItem(ResultSet rs, Resume resume, String columnValue, String columnType) throws SQLException {
+    private void addContacts(ResultSet rs, Resume resume) throws SQLException {
         while (rs.next()) {
-            String value = rs.getString(columnValue);
+            String value = rs.getString("value");
             if (value != null) {
-                String stringType = rs.getString(columnType);
-                if (Arrays.stream(SectionType.values()).anyMatch((t) -> t.name().equals(stringType))) {
-                    SectionType type = SectionType.valueOf(stringType);
-                    resume.addSections(type, type.name().equals("PERSONAL") || type.name().equals("OBJECTIVE")
-                            ? new TextSection(value) : new ListSection(value.split("\n")));
-                } else if (Arrays.stream(Contacts.values()).anyMatch((t) -> t.name().equals(stringType))) {
-                    Contacts type = Contacts.valueOf(stringType);
-                    resume.addContact(type, value);
-                }
+                Contacts type = Contacts.valueOf(rs.getString("type"));
+                resume.addContact(type, value);
             }
         }
     }
 
+    private void addSections(ResultSet rs, Resume resume) throws SQLException {
+        while (rs.next()) {
+            String value = rs.getString("value_section");
+            if (value != null) {
+                String stringType = rs.getString("type_section");
+                if (Arrays.stream(SectionType.values()).anyMatch((t) -> t.name().equals(stringType))) {
+                    SectionType type = SectionType.valueOf(stringType);
+                    resume.addSections(type, type.name().equals("PERSONAL") || type.name().equals("OBJECTIVE")
+                            ? new TextSection(value) : new ListSection(value.split("\n")));
+                }
+            }
+        }
+    }
 
     private <T> T getResult(Connection conn, String uuid, String sqlQuery, Function<T> func) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
