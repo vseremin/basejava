@@ -33,7 +33,7 @@ public class Company implements Serializable {
     public Company(String website, String name, List<Period> period) {
         Objects.requireNonNull(name, "name must not be null");
         Objects.requireNonNull(period, "period must not be null");
-        this.website = website;
+        this.website = website != null ? website : "";
         this.name = name;
         this.periods = period;
     }
@@ -106,7 +106,7 @@ public class Company implements Serializable {
             this.startDate = startDate;
             this.endDate = endDate;
             this.title = title;
-            this.description = description;
+            this.description = description == null ? "" : description;
         }
 
         public LocalDate getStartDate() {

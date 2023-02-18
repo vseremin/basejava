@@ -8,13 +8,14 @@ import java.util.Properties;
 
 public class Config {
     private static final Config INSTANCE = new Config();
-    protected static File PROPS;
+    protected static File PROPS;// = new File(getHomeDir(),  "config/resumes.properties");
+
     private final Properties props = new Properties();
     private final File storageDir;
     private final Storage storage;
 
     private Config() {
-        PROPS = new File("/home/user/StartJava/Basejava/config/resumes.properties");
+        PROPS = new File(getHomeDir(), "config/resumes.properties");
         try (InputStream is = new FileInputStream(PROPS)) {
             props.load(is);
             storageDir = new File(props.getProperty("storage.dir"));
@@ -35,5 +36,14 @@ public class Config {
 
     public Storage getStorage() {
         return storage;
+    }
+
+    private static String getHomeDir() {
+        String homeDir = System.getProperty("homeDir");
+        File file = new File(homeDir == null ? "." : homeDir);
+        if (!file.isDirectory()) {
+            throw new IllegalStateException(homeDir + " is not directory");
+        }
+        return homeDir;
     }
 }

@@ -1,61 +1,88 @@
 package ru.javawebinar.webapp.web;
 
 import ru.javawebinar.webapp.Config;
-import ru.javawebinar.webapp.model.Resume;
+import ru.javawebinar.webapp.model.*;
 import ru.javawebinar.webapp.storage.Storage;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 public class ResumeServlet extends HttpServlet {
-    public static Storage storage = Config.getInstance().getStorage();
+    private Resume newResume;
+    public static Storage storage;
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        storage = Config.getInstance().getStorage();
+    }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html; charset=UTF-8");
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String uuid = request.getParameter("uuid");
-        response.getWriter().write("""
-                <html>
-                <title>Resume</title>
-                <body>
-                <center>
-                <table border = "1">
-                <tr>
-                <th>Uuid</th>
-                <th>Full Name</th>
-                </tr>
-                """);
-
-        List<Resume> resumes = storage.getAllSorted();
-        if (uuid != null && resumes.stream().anyMatch(p -> p.getUuid().equals(uuid))) {
-            response.getWriter().write( "<td>" + "<center>" + uuid + "</center>" + "</td>\n" +
-                    "<td>" + "<center>" + resumes.stream().filter(p -> p.getUuid().equals(uuid))
-                    .findFirst().get().getFullName() + "</center>" + "</td>\n");
-        } else {
-            for (Resume resume : resumes) {
-                response.getWriter().write("<tr>\n" +
-                        "<td height = 50>" + "<center>" + resume.getUuid() + "</center>" + "</td>\n" +
-                        "<td>" + "<center>" + resume.getFullName() + "</center>" + "</td>\n" +
-                        "</tr>\n");
-            }
+        String action = request.getParameter("action");
+        if (action == null) {
+            request.setAttribute("resumes", storage.getAllSorted());
+            request.getRequestDispatcher("/WEB-INF/jsp/list.jsp").forward(request, response);
+            return;
         }
-        response.getWriter().write("""
-                </center>
-                </table>
-                </body>
-                </html>""");
+        Resume r;
+        switch (action) {
+            case "delete" -> {
+                storage.delete(uuid);
+                response.sendRedirect("resume");
+                return;
+            }
+            case "view", "edit" -> r = storage.get(uuid);
+            case "add" -> {
+                r = new Resume();
+                r.setFullName("");
+                newResume = r;
+            }
+            default -> throw new IllegalArgumentException("Action " + action + " is illegal");
+        }
+        request.setAttribute("resume", r);
+        request.getRequestDispatcher(
+                ("view".equals(action) ? "/WEB-INF/jsp/view.jsp" : "/WEB-INF/jsp/edit.jsp")
+        ).forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        request.setCharacterEncoding("UTF-8");
+        String uuid = request.getParameter("uuid");
+        String fullName = request.getParameter("fullName");
+        if (!storage.getAllSorted().stream().map(Resume::getUuid).anyMatch(uuid::equals)) {
+            storage.save(newResume);
+        }
+        Resume r = storage.get(uuid);
+        r.setFullName(fullName);
+        for (Contacts type : Contacts.values()) {
+            String value = request.getParameter(type.name());
+            if (value != null && value.trim().length() != 0) {
+                r.addContact(type, value);
+            } else {
+                r.getContacts().remove(type);
+            }
+        }
+        for (SectionType type : SectionType.values()) {
+            String value = request.getParameter(type.name());
+            if (value != null && value.trim().length() != 0) {
+                r.addSections(type, switch (type) {
+                    case PERSONAL, OBJECTIVE -> new TextSection(value);
+                    case ACHIEVEMENT, QUALIFICATIONS -> new ListSection(UtilForWeb.tarnsformValueToList(value));
+                    case EDUCATION, EXPERIENCE -> new CompanySection();
+                });
+            } else {
+                if (!type.name().equals("EDUCATION") && !type.name().equals("EXPERIENCE")) {
+                    r.getSection().remove(type);
+                }
+            }
+        }
+        storage.update(r);
+        response.sendRedirect("resume");
     }
 }
