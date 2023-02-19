@@ -39,7 +39,7 @@ public class ResumeServlet extends HttpServlet {
             case "view", "edit" -> r = storage.get(uuid);
             case "add" -> {
                 r = new Resume();
-                r.setFullName("");
+//                r.setFullName("");
                 newResume = r;
             }
             default -> throw new IllegalArgumentException("Action " + action + " is illegal");
@@ -55,8 +55,11 @@ public class ResumeServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String uuid = request.getParameter("uuid");
         String fullName = request.getParameter("fullName");
-        if (!storage.getAllSorted().stream().map(Resume::getUuid).anyMatch(uuid::equals)) {
+        if (storage.getAllSorted().stream().map(Resume::getUuid).noneMatch(uuid::equals)) {
             storage.save(newResume);
+        }
+        if (fullName.trim().equals("")) {
+            fullName = "fullName";
         }
         Resume r = storage.get(uuid);
         r.setFullName(fullName);
