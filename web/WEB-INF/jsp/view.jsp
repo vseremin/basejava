@@ -39,21 +39,26 @@
             </c:when>
             <c:when test="<%=sectionEntry.getKey().equals(SectionType.EDUCATION)
                     || sectionEntry.getKey().equals(SectionType.EXPERIENCE)%>">
-                <c:forEach var ="company" items="<%=((CompanySection) sectionEntry.getValue()).getCompanies()%>">
+                <c:forEach var="company" items="<%=((CompanySection) sectionEntry.getValue()).getCompanies()%>">
                     <jsp:useBean id="company"
                                  type="ru.javawebinar.webapp.model.Company"/>
-                    <a href="${company.getWebsite()}"><h4><%=company.getName()%></h4></a>
-                    <c:forEach var = "period" items="<%=company.getPeriods()%>">
+                    <a href="${company.getWebsite()}"><h4><%=company.getName()%>
+                    </h4></a>
+                    <c:forEach var="period" items="<%=company.getPeriods()%>">
                         <jsp:useBean id="period"
                                      type="ru.javawebinar.webapp.model.Company.Period"/>
                         <table>
                             <tr align="left">
-                                <th width="250"><%=period.getStartDate()%> - <%=period.getEndDate()%></th>
-                                <th> <%=period.getTitle()%></th>
+                                <th width="250"><%=period.getStartDate() != null ? period.getStartDate() +
+                                        " - " : ""%> <%=period.getEndDate() != null ? period.getEndDate() : ""%>
+                                </th>
+                                <th><%=period.getTitle()%>
+                                </th>
                             </tr>
                             <tr>
                                 <td></td>
-                                <td width="700"><%=period.getDescription()%></td>
+                                <td width="700"><%=period.getDescription()%>
+                                </td>
                             </tr>
                         </table>
                     </c:forEach>

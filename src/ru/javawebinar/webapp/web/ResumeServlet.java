@@ -14,6 +14,7 @@ import java.io.IOException;
 public class ResumeServlet extends HttpServlet {
     private Resume newResume;
     public static Storage storage;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -39,7 +40,7 @@ public class ResumeServlet extends HttpServlet {
             case "view", "edit" -> r = storage.get(uuid);
             case "add" -> {
                 r = new Resume();
-//                r.setFullName("");
+                r.setFullName("");
                 newResume = r;
             }
             default -> throw new IllegalArgumentException("Action " + action + " is illegal");
@@ -58,9 +59,7 @@ public class ResumeServlet extends HttpServlet {
         if (storage.getAllSorted().stream().map(Resume::getUuid).noneMatch(uuid::equals)) {
             storage.save(newResume);
         }
-        if (fullName.trim().equals("")) {
-            fullName = "fullName";
-        }
+
         Resume r = storage.get(uuid);
         r.setFullName(fullName);
         for (Contacts type : Contacts.values()) {
@@ -73,16 +72,21 @@ public class ResumeServlet extends HttpServlet {
         }
         for (SectionType type : SectionType.values()) {
             String value = request.getParameter(type.name());
+            if (type == SectionType.EDUCATION || type == SectionType.EXPERIENCE) {
+                String[] values = request.getParameterValues(type.name());
+                for (int i = 0; i < values.length && value != null; i++) {
+                    value = values[i];
+                }
+            }
             if (value != null && value.trim().length() != 0) {
                 r.addSections(type, switch (type) {
                     case PERSONAL, OBJECTIVE -> new TextSection(value);
                     case ACHIEVEMENT, QUALIFICATIONS -> new ListSection(UtilForWeb.tarnsformValueToList(value));
-                    case EDUCATION, EXPERIENCE -> new CompanySection();
+                    case EDUCATION, EXPERIENCE ->
+                            new CompanySection(UtilForWeb.transformValueToCompany(type.name(), request));
                 });
             } else {
-                if (!type.name().equals("EDUCATION") && !type.name().equals("EXPERIENCE")) {
-                    r.getSection().remove(type);
-                }
+                r.getSection().remove(type);
             }
         }
         storage.update(r);
