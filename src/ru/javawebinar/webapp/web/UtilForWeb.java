@@ -4,7 +4,7 @@ import ru.javawebinar.webapp.model.Company;
 import ru.javawebinar.webapp.model.CompanySection;
 import ru.javawebinar.webapp.model.Resume;
 import ru.javawebinar.webapp.model.SectionType;
-import ru.javawebinar.webapp.util.LocalDateAdapter;
+import ru.javawebinar.webapp.util.DateUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
@@ -33,12 +33,10 @@ public class UtilForWeb {
             String[] descriptions = request.getParameterValues(value + "description_" + i);
             for (int j = 0; j < startDates.length; j++) {
                 try {
-                    LocalDate startData = startDates[j].equals("") ? null :
-                            new LocalDateAdapter().unmarshal(startDates[j]);
-                    LocalDate endData = endDates[j].equals("") ? null :
-                            new LocalDateAdapter().unmarshal(startDates[j]);
+                    LocalDate startData = DateUtil.parse(startDates[j]);
+                    LocalDate endData = DateUtil.parse(endDates[j]);
                     if (startData != null && endData != null) {
-                        if (!titles[j].trim().equals("") || !descriptions[j].trim().equals("")) {
+                        if (!titles[j].trim().equals("")) {
                             periods.add(new Company.Period(startData, endData, titles[j], descriptions[j]));
                         }
                     }
@@ -69,5 +67,10 @@ public class UtilForWeb {
                 company.getPeriods() : new ArrayList<>();
         listPeriod.add(new Company.Period());
         return listPeriod;
+    }
+
+    public static String convertDataToString(Company.Period period) {
+        return DateUtil.format(period.getStartDate()) + " - " + DateUtil.format(period.getEndDate());
+
     }
 }

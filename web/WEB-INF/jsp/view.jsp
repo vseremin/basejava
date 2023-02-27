@@ -42,15 +42,22 @@
                 <c:forEach var="company" items="<%=((CompanySection) sectionEntry.getValue()).getCompanies()%>">
                     <jsp:useBean id="company"
                                  type="ru.javawebinar.webapp.model.Company"/>
-                    <a href="${company.getWebsite()}"><h4><%=company.getName()%>
-                    </h4></a>
+                    <c:choose>
+                        <c:when test="${!company.getWebsite().equals(\"\")}">
+                            <a href="${company.getWebsite()}"><h4><%=company.getName()%>
+                            </h4></a>
+                        </c:when>
+                        <c:when test="${company.getWebsite().equals(\"\")}">
+                            <h4><%=company.getName()%>
+                            </h4>
+                        </c:when>
+                    </c:choose>
                     <c:forEach var="period" items="<%=company.getPeriods()%>">
                         <jsp:useBean id="period"
                                      type="ru.javawebinar.webapp.model.Company.Period"/>
                         <table>
                             <tr align="left">
-                                <th width="250"><%=period.getStartDate() != null ? period.getStartDate() +
-                                        " - " : ""%> <%=period.getEndDate() != null ? period.getEndDate() : ""%>
+                                <th width="250"><%=UtilForWeb.convertDataToString(period)%>
                                 </th>
                                 <th><%=period.getTitle()%>
                                 </th>
@@ -66,6 +73,7 @@
             </c:when>
         </c:choose>
     </c:forEach>
+    <button onclick="window.history.back()">OK</button>
 </section>
 <jsp:include page="fragments/footer.jsp"/>
 </body>

@@ -1,6 +1,7 @@
 <%@ page import="ru.javawebinar.webapp.model.Contacts" %>
 <%@ page import="ru.javawebinar.webapp.model.SectionType" %>
 <%@ page import="ru.javawebinar.webapp.web.UtilForWeb" %>
+<%@ page import="ru.javawebinar.webapp.util.DateUtil" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
@@ -53,10 +54,10 @@
                     </br>
                 </c:when>
                 <c:when test="${section.equals(SectionType.EXPERIENCE) || section.equals(SectionType.EDUCATION)}">
+                    <dt>${section.title}:</dt>
                     <c:forEach var="company" items="${UtilForWeb.getCompany(resume, section)}" varStatus="status">
                         <jsp:useBean id="company"
                                      type="ru.javawebinar.webapp.model.Company"/>
-                        <dt>${section.title}:</dt>
                         </br>
                         <dt></dt>
                         <dd><textarea class="period" placeholder="Название" style="width:700px; height:70px;"
@@ -74,12 +75,13 @@
                             <table>
                                 <tr align="left">
                                     <td width="174"></td>
-                                    <td width="550"><textarea class="period" placeholder="Начало, ГГГГ-ММ-ДД"
+                                    <td width="550"><textarea class="period" placeholder="Начало, MM/yyyy"
                                                               name="<%=section.name() + "startData"%>_<%
-                                                              %>${status.getIndex()}">${period.getStartDate()}</textarea><%
-                                    %> - <textarea class="period" placeholder="Окончание, ГГГГ-ММ-ДД"
+                                                              %>${status.getIndex()}"><%=
+                                    DateUtil.format(period.getStartDate())%></textarea><%
+                                    %> - <textarea class="period" placeholder="Окончание, MM/yyyy"
                                                    name="<%=section.name() + "endData"%>_${status.getIndex()}"><%
-                                    %>${period.getEndDate()}</textarea>
+                                    %><%=DateUtil.format(period.getEndDate())%></textarea>
                                     </td>
                                 </tr>
                                 <tr>
